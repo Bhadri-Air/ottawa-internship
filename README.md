@@ -33,19 +33,6 @@ Everything between the markers is generated. Don't edit it by hand.
 
 ---
 
-## Setup (about 5 minutes)
-
-1. Create a new **public** repository on GitHub (public repos get unlimited free Actions minutes).
-2. Upload every file from this folder, keeping the `.github/workflows/radar.yml` path.
-3. Go to **Settings → Actions → General → Workflow permissions** and pick **Read and write permissions**.
-4. Go to **Actions → radar → Run workflow**. After a minute or two the feed above fills in.
-
-From then on it runs by itself. GitHub doesn't send notifications for commits, so bookmark the repo
-page and check the 🆕 rows.
-
-GitHub pauses scheduled workflows after 60 days with no commits. The radar's own commits count, so an
-active feed keeps itself alive; if it ever stops, press **Run workflow** once.
-
 ## Running it on your laptop
 
 Python 3.10 or newer, nothing to install:
