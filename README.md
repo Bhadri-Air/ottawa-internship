@@ -1,4 +1,4 @@
-# Ottawa + Toronto Summer 2027 Internship Radar
+# Ottawa  Summer 2027 Internship Radar
 
 [![radar](../../actions/workflows/radar.yml/badge.svg)](../../actions/workflows/radar.yml)
 
