@@ -1,0 +1,841 @@
+"""Tests for the tier classifier.
+
+The classifier is one of two places where a bug silently costs a job, so the
+fixtures below are real title/location shapes taken from live boards rather
+than invented strings.
+"""
+
+import os
+import sys
+import time
+import unittest
+from datetime import datetime, timedelta, timezone
+from unittest import mock
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from core import LOOSE, OTHER, STRICT, Posting, classify  # noqa: E402
+
+# A fixed offset rather than ZoneInfo: the day-label tests only need a stable
+# Toronto wall clock, and this keeps them running where tzdata is absent.
+EDT = timezone(timedelta(hours=-4), "EDT")
+
+
+def at(day, hour, minute=0):
+    """A September 2026 Toronto wall time, for pinning "now" in age tests."""
+    return datetime(2026, 9, day, hour, minute)
+
+
+def p(title, location="Toronto, Ontario, Canada", company="Acme",
+      ai_native=False, raw=None):
+    return Posting(
+        company=company,
+        title=title,
+        location=location,
+        url="https://example.com/j/1",
+        uid="u1",
+        ai_native=ai_native,
+        raw=raw or {},
+    )
+
+
+def tier(*args, **kwargs):
+    return classify(p(*args, **kwargs)).tier
+
+
+class TestStrictTier(unittest.TestCase):
+    """AI signal + student signal + Canada signal fires an instant ping."""
+
+    def test_canonical_ml_intern(self):
+        self.assertEqual(tier("Machine Learning Intern"), STRICT)
+
+    def test_ai_abbreviation_in_title(self):
+        self.assertEqual(tier("AI Engineer Intern, Summer 2027"), STRICT)
+
+    def test_ml_abbreviation_in_title(self):
+        self.assertEqual(tier("ML Engineering Co-op"), STRICT)
+
+    def test_applied_scientist_intern(self):
+        self.assertEqual(tier("Applied Scientist Intern"), STRICT)
+
+    def test_research_intern_deep_learning(self):
+        self.assertEqual(tier("Deep Learning Research Intern"), STRICT)
+
+    def test_data_science_coop(self):
+        self.assertEqual(tier("Data Science Co-op Student"), STRICT)
+
+    def test_llm_intern(self):
+        self.assertEqual(tier("LLM Infrastructure Intern"), STRICT)
+
+    def test_perception_intern_for_av_company(self):
+        self.assertEqual(tier("Perception Engineering Intern"), STRICT)
+
+    def test_remote_in_canada_counts_as_location(self):
+        self.assertEqual(tier("NLP Intern", location="Remote in Canada"), STRICT)
+
+    def test_winter_2027_cycle_token_is_rejected(self):
+        self.assertIsNone(tier("AI Intern (W27)"))
+
+
+class TestCoopSpellingVariants(unittest.TestCase):
+    """Boards spell co-op five different ways. All must reach strict."""
+
+    def test_variants(self):
+        for spelling in [
+            "Machine Learning Co-op",
+            "Machine Learning Co op",
+            "Machine Learning Coop",
+            "Machine Learning Cooperative Education",
+            "Machine Learning CO-OP",
+        ]:
+            with self.subTest(spelling=spelling):
+                self.assertEqual(tier(spelling), STRICT)
+
+    def test_pey_titles(self):
+        """U of T's Professional Experience Year often replaces "co-op" outright."""
+        for title in [
+            "Machine Learning Engineer (PEY)",
+            "PEY Student, Data Science",
+            "Data Scientist, Professional Experience Year",
+        ]:
+            with self.subTest(title=title):
+                self.assertEqual(tier(title), STRICT)
+
+    def test_pey_is_a_whole_word(self):
+        self.assertIsNone(tier("Machine Learning Engineer, Peyton Team"))
+
+
+class TestAiNativeCompanyPromotion(unittest.TestCase):
+    """A generic title at an AI-native company still earns an instant ping."""
+
+    def test_generic_title_at_ai_native_company_is_strict(self):
+        self.assertEqual(
+            tier("Software Engineer Intern", company="Cohere", ai_native=True), STRICT
+        )
+
+    def test_same_title_elsewhere_is_loose(self):
+        self.assertEqual(
+            tier("Software Engineer Intern", company="Faire", ai_native=False), LOOSE
+        )
+
+    def test_ai_native_still_needs_student_signal(self):
+        self.assertIsNone(
+            tier("Staff Software Engineer", company="Cohere", ai_native=True)
+        )
+
+    def test_ai_native_still_needs_an_ontario_signal(self):
+        self.assertEqual(
+            tier("Software Engineer Intern", location="San Francisco, CA",
+                 company="Cohere", ai_native=True),
+            None,
+        )
+
+
+class TestLooseTier(unittest.TestCase):
+    """Ambiguous goes to loose, never to the bin."""
+
+    def test_opaque_rotational_title(self):
+        self.assertEqual(tier("Technology Analyst, Rotational"), LOOSE)
+
+    def test_generic_swe_intern(self):
+        self.assertEqual(tier("Software Engineer Intern"), LOOSE)
+
+    def test_business_intern_in_canada(self):
+        self.assertEqual(tier("Product Management Intern"), LOOSE)
+
+    def test_fall_2027_is_rejected(self):
+        self.assertIsNone(tier("Machine Learning Intern, Fall 2027"))
+
+    def test_later_cycle_is_never_rejected(self):
+        self.assertIsNotNone(tier("Data Science Intern (S27)"))
+
+
+class TestNewGradCap(unittest.TestCase):
+    """Full-time new-grad roles are kept, but never strict: the radar hunts
+    internships and co-ops."""
+
+    def test_new_grad_ml_role_is_loose(self):
+        self.assertEqual(tier("New Grad Machine Learning Engineer"), LOOSE)
+
+    def test_quora_new_grad_remote_canada_is_loose(self):
+        """Regression: this reached strict on "Remote in Canada" + "New Grad"."""
+        verdict = classify(p(
+            "Software Engineer New Grad - Machine Learning Platform",
+            location="Remote in USA, Remote in Canada",
+            company="Quora",
+        ))
+        self.assertEqual(verdict.tier, LOOSE)
+        self.assertEqual(verdict.reason, "new grad, not internship")
+
+    def test_new_grad_at_ai_native_company_is_loose(self):
+        self.assertEqual(
+            tier("Software Engineer, New Grad", company="Cohere", ai_native=True),
+            LOOSE,
+        )
+
+    def test_intern_or_new_grad_stays_strict(self):
+        self.assertEqual(tier("ML Intern / New Grad"), STRICT)
+
+    def test_early_career_non_ai_is_loose(self):
+        self.assertEqual(tier("Early Career Software Developer"), LOOSE)
+
+
+class TestOtherFields(unittest.TestCase):
+    """Off-field student roles are kept, filed under "Other fields".
+
+    Titles are from the live feed on 29 September 2026, where they made up
+    most of the loose tier.
+    """
+
+    def test_off_field_titles_go_to_other(self):
+        for title, location in [
+            ("Analog Design Intern, Summer 2027", "Toronto, ON, Canada"),
+            ("Hardware Design and Verification Intern - PCBA, Summer 2027",
+             "Markham, ON, Canada"),
+            ("Analog and Mixed Signal Layout Engineer Intern Co-op, Summer 2027",
+             "Toronto, ON, Canada"),
+            ("Capital Markets Analyst Intern, Summer 2027", "Toronto, ON, Canada"),
+            ("Firmware Intern, Summer 2027", "Ottawa, ON, Canada"),
+            ("Validation Engineering Intern, Summer 2027", "Mississauga, ON, Canada"),
+            ("Email Marketing Intern", "Toronto, ON, Canada"),
+        ]:
+            with self.subTest(title=title):
+                self.assertEqual(tier(title, location=location), OTHER)
+
+    def test_software_roles_stay_loose(self):
+        for title in [
+            "Software Developer Co-op, Summer 2027",
+            "Developer Intern - Back End Technologies, Summer 2027",
+            "Software Development Intern - Citizen Remote Identity Verification",
+        ]:
+            with self.subTest(title=title):
+                self.assertEqual(tier(title), LOOSE)
+
+    def test_ai_signal_beats_off_field(self):
+        self.assertEqual(tier("Machine Learning Firmware Intern"), STRICT)
+
+    def test_ai_native_company_beats_off_field(self):
+        self.assertEqual(
+            tier("Hardware Design Intern", company="Tenstorrent", ai_native=True),
+            STRICT,
+        )
+
+    def test_off_field_outside_ontario_is_still_rejected(self):
+        self.assertIsNone(tier("Analog Design Intern", location="Austin, TX"))
+
+
+class TestPastCycles(unittest.TestCase):
+    """Cycles earlier than the target are rejected: that recruiting is over.
+
+    Targets are Winter and Summer 2027 (companies.TARGET_CYCLES).
+    """
+
+    def test_fall_2026_is_rejected(self):
+        self.assertIsNone(tier("AI Research Intern - Fall 2026"))
+
+    def test_summer_2026_is_rejected(self):
+        self.assertIsNone(tier("Machine Learning Intern, Summer 2026"))
+
+    def test_winter_2026_is_rejected(self):
+        self.assertIsNone(tier("ML Intern (Winter 2026)"))
+
+    def test_short_form_past_cycle_is_rejected(self):
+        self.assertIsNone(tier("Data Science Intern F26"))
+
+    def test_winter_2027_still_strict(self):
+        self.assertEqual(tier("ML Intern, Summer 2027"), STRICT)
+
+    def test_future_cycle_is_rejected(self):
+        self.assertIsNone(tier("ML Intern, Fall 2027"))
+
+    def test_summer_2027_is_a_target(self):
+        self.assertEqual(tier("Machine Learning Intern, Summer 2027"), STRICT)
+        self.assertEqual(tier("ML Intern (S27)"), STRICT)
+
+    def test_spring_is_not_summer(self):
+        self.assertIsNone(tier("ML Intern, Spring 2027"))
+
+    def test_cycle_label_alone_is_student_level(self):
+        """Regression: no intern wording, so these were "not student level"."""
+        self.assertEqual(tier("ML Engineer - Summer 2027"), STRICT)
+        self.assertEqual(tier("Software Engineer, Summer 2027"), LOOSE)
+        post = p("Machine Learning Engineer", raw={"details": "4mo - Summer 2027"})
+        self.assertEqual(classify(post).tier, STRICT)
+
+    def test_past_cycle_label_is_not_student_level(self):
+        self.assertIsNone(tier("ML Engineer - Fall 2026"))
+        self.assertIsNone(tier("Machine Learning Engineer"))
+
+    def test_multi_cycle_posting_keeps_the_best_one(self):
+        """A req spanning several terms is live if any of them is the target."""
+        self.assertEqual(
+            tier("Machine Learning Intern - Summer 2026, Summer 2027, Fall 2027"),
+            STRICT,
+        )
+
+    def test_multi_cycle_all_past_is_rejected(self):
+        self.assertIsNone(tier("ML Intern - Summer 2026, Fall 2026"))
+
+    def test_no_cycle_named_is_still_eligible(self):
+        self.assertEqual(tier("Machine Learning Intern"), STRICT)
+
+    def test_bare_year_does_not_reject(self):
+        """"2026 Intern" has no season, so it is too ambiguous to drop."""
+        self.assertIsNotNone(tier("2026 Intern, Research Scientist"))
+
+
+class TestCycleOutsideTitle(unittest.TestCase):
+    """Trackers hide the work term in a details column, not the title.
+
+    Regression: a SAP iXp intern role whose only cycle signal was
+    "Intern - 4mo - $18-$36/hr - Fall 2026" in the details column sailed
+    through as strict, and showed up on the dashboard a month after it closed.
+    """
+
+    def test_fall_2026_in_details_is_rejected(self):
+        post = p(
+            "SAP iXp Intern - Software Developer (Agentic AI & LLM systems)",
+            location="Montreal, Quebec (Hybrid)",
+            company="SAP",
+            raw={"details": "Intern - 4mo - $18-$36/hr - Fall 2026"},
+        )
+        self.assertIsNone(classify(post).tier)
+
+    def test_cycle_in_terms_field_is_read(self):
+        post = p("Machine Learning Intern", raw={"terms": ["Fall 2026"]})
+        self.assertIsNone(classify(post).tier)
+
+    def test_target_cycle_in_details_still_strict(self):
+        post = p("Machine Learning Intern",
+                 raw={"details": "Co-op - 8mo - Summer 2027"})
+        self.assertEqual(classify(post).tier, STRICT)
+
+    def test_details_without_a_cycle_changes_nothing(self):
+        post = p("Machine Learning Intern", raw={"details": "Co-op - 8mo - $20/hr"})
+        self.assertEqual(classify(post).tier, STRICT)
+
+
+class TestCycleParsing(unittest.TestCase):
+    def test_parses_long_and_short_forms(self):
+        from core import parse_cycles
+
+        self.assertEqual(parse_cycles("Winter 2027"), [(2027, 1)])
+        self.assertEqual(parse_cycles("W27"), [(2027, 1)])
+        self.assertEqual(parse_cycles("Fall 2026"), [(2026, 9)])
+        self.assertEqual(parse_cycles("Summer '27"), [(2027, 5)])
+
+    def test_parses_multiple_sorted(self):
+        from core import parse_cycles
+
+        self.assertEqual(
+            parse_cycles("Summer 2026, Winter 2027, Fall 2027"),
+            [(2026, 5), (2027, 1), (2027, 9)],
+        )
+
+    def test_no_cycle_returns_empty(self):
+        from core import parse_cycles
+
+        self.assertEqual(parse_cycles("Machine Learning Intern"), [])
+        self.assertEqual(parse_cycles(""), [])
+
+
+class TestFreshness(unittest.TestCase):
+    """Postings older than MAX_AGE_HOURS are recorded but never surfaced."""
+
+    def test_recent_posting_is_fresh(self):
+        import radar
+
+        self.assertTrue(radar.is_fresh(int(time.time()) - 3600))
+
+    def test_posting_older_than_the_window_is_stale(self):
+        import companies as cfg
+        import radar
+
+        older = int(time.time()) - (cfg.MAX_AGE_HOURS + 48) * 3600
+        self.assertFalse(radar.is_fresh(older))
+
+    def test_unknown_date_counts_as_fresh(self):
+        """Several sources expose no date; dropping them all would be worse."""
+        import radar
+
+        self.assertTrue(radar.is_fresh(0))
+
+    def test_boundary_just_inside_window(self):
+        import companies as cfg
+        import radar
+
+        self.assertTrue(
+            radar.is_fresh(int(time.time()) - cfg.MAX_AGE_HOURS * 3600 + 120)
+        )
+
+    def test_boundary_just_outside_window(self):
+        import companies as cfg
+        import radar
+
+        self.assertFalse(
+            radar.is_fresh(int(time.time()) - cfg.MAX_AGE_HOURS * 3600 - 120)
+        )
+
+
+class TestDayLabels(unittest.TestCase):
+    """Ages are shown in calendar days in Toronto, newest first.
+
+    Every case pins "now" rather than reading the wall clock. Two of these
+    used to derive it from ``time.time()``, which quietly assumed CI never
+    runs in the small hours: the 04:33 UTC scheduled run failed because at
+    00:33 Toronto, three hours ago really is yesterday, and thirty hours ago
+    really is two dates back.
+    """
+
+    def label(self, now_wall, then_wall):
+        """``_day_label`` with both instants given as Toronto wall times."""
+        import notify
+
+        now = now_wall.replace(tzinfo=EDT)
+        then = int(then_wall.replace(tzinfo=EDT).timestamp())
+        with mock.patch.object(notify, "toronto_now", lambda: now):
+            return notify._day_label(then)
+
+    def test_just_posted_is_today(self):
+        self.assertEqual(
+            self.label(at(5, 13, 0), at(5, 12, 50)), ("Today", 0)
+        )
+
+    def test_a_few_hours_earlier_the_same_day_is_today(self):
+        self.assertEqual(self.label(at(5, 13, 0), at(5, 10, 0))[0], "Today")
+
+    def test_late_last_night_read_after_midnight_is_yesterday(self):
+        """The whole point of calendar days: 11pm, read at 1am, is Yesterday."""
+        self.assertEqual(self.label(at(5, 1, 0), at(4, 23, 0)), ("Yesterday", 1))
+
+    def test_three_hours_before_a_small_hours_run_is_yesterday(self):
+        """Regression: the CI failure at 00:33 Toronto. Yesterday is correct."""
+        self.assertEqual(self.label(at(5, 0, 33), at(4, 21, 33))[0], "Yesterday")
+
+    def test_thirty_hours_before_midday_is_yesterday(self):
+        self.assertEqual(self.label(at(5, 13, 0), at(4, 7, 0)), ("Yesterday", 1))
+
+    def test_thirty_hours_before_a_small_hours_run_is_two_days(self):
+        """Regression: 30h before 05:06 spans two dates, so 2 is correct."""
+        self.assertEqual(self.label(at(5, 5, 6), at(3, 23, 6)), ("2 days ago", 2))
+
+    def test_multiple_days_are_counted(self):
+        self.assertEqual(
+            self.label(at(9, 13, 0), at(5, 13, 0)), ("4 days ago", 4)
+        )
+
+    def test_future_timestamps_are_clamped_to_today(self):
+        self.assertEqual(self.label(at(5, 13, 0), at(6, 13, 0)), ("Today", 0))
+
+    def test_bad_timestamps_do_not_crash(self):
+        import notify
+
+        for ts in (0, -1, 99_999_999_999_999):
+            with self.subTest(ts=ts):
+                label, days = notify._day_label(ts)
+                self.assertIsInstance(label, str)
+                self.assertIsInstance(days, int)
+
+
+class TestSecondaryLocations(unittest.TestCase):
+    """Ashby lists a US primary with Toronto in secondaryLocations."""
+
+    def test_toronto_in_secondary_locations_reaches_strict(self):
+        post = p(
+            "Machine Learning Intern",
+            location="New York",
+            raw={
+                "location": "New York",
+                "secondaryLocations": [
+                    {"location": "San Francisco"},
+                    {"location": "Toronto",
+                     "address": {"postalAddress": {"addressCountry": "Canada"}}},
+                ],
+            },
+        )
+        self.assertEqual(classify(post).tier, STRICT)
+
+    def test_us_only_secondary_locations_still_rejected(self):
+        post = p(
+            "Machine Learning Intern",
+            location="New York",
+            raw={
+                "location": "New York",
+                "secondaryLocations": [{"location": "San Francisco, CA"}],
+            },
+        )
+        self.assertIsNone(classify(post).tier)
+
+    def test_is_remote_flag_alone_cannot_confirm_canada(self):
+        """The flag says the role is remote, not which country it is remote in."""
+        post = p("AI Intern", location="", raw={"isRemote": True})
+        self.assertIsNone(classify(post).tier)
+
+
+class TestRejects(unittest.TestCase):
+    """Reject only: unpaid, volunteer, high school, PhD-only."""
+
+    def test_unpaid(self):
+        self.assertIsNone(tier("Unpaid Machine Learning Intern"))
+
+    def test_volunteer(self):
+        self.assertIsNone(tier("Volunteer AI Research Intern"))
+
+    def test_high_school(self):
+        self.assertIsNone(tier("High School Summer Intern, AI"))
+
+    def test_phd_only(self):
+        self.assertIsNone(tier("Research Intern (PhD only)"))
+
+    def test_plain_phd_mention_is_not_rejected(self):
+        """Plenty of ML internships prefer a PhD but accept master's students."""
+        self.assertEqual(tier("PhD Machine Learning Research Intern"), STRICT)
+
+    def test_non_student_role_is_binned(self):
+        self.assertIsNone(tier("Senior Machine Learning Engineer"))
+
+    def test_explicit_us_location_is_binned(self):
+        self.assertIsNone(tier("ML Intern", location="Seattle, WA"))
+
+    def test_explicit_india_location_is_binned(self):
+        self.assertIsNone(tier("ML Intern", location="Bangalore, India"))
+
+
+class TestFalsePositiveGuards(unittest.TestCase):
+    """Short tokens like 'ai' and 'ml' must not match inside other words."""
+
+    def test_email_does_not_match_ai(self):
+        self.assertEqual(tier("Email Platform Intern"), LOOSE)
+
+    def test_html_does_not_match_ml(self):
+        self.assertEqual(tier("HTML Developer Intern"), LOOSE)
+
+    def test_retail_does_not_match_ai(self):
+        self.assertEqual(tier("Retail Operations Intern"), OTHER)
+
+    def test_maintenance_does_not_match_ai(self):
+        self.assertEqual(tier("Maintenance Technician Intern"), OTHER)
+
+
+class TestLooseIsTechOnly(unittest.TestCase):
+    """Titles and locations taken from the live loose tier."""
+
+    def test_loblaw_store_shifts_are_rejected(self):
+        loc = "1059 Plains Rd E, Burlington, ON"
+        for title in (
+            "Pizza Student Part Time Day Greenlight Requisition",
+            "Student, Franchise Part Time Evening",
+            "Carvery Student Part Time Day Greenlight Requisition",
+            "Pharmacy Student",
+        ):
+            with self.subTest(title=title):
+                self.assertIsNone(tier(title, location=loc, company="Loblaw Companies"))
+
+    def test_branch_advisor_roles_go_to_other(self):
+        for title in (
+            "Financial Advisor Intern",
+            "Relationship Manager Commercial Banking - Intern",
+            "Public Relations Intern, Summer 2027 (Co-op/Internship) - 4 Months",
+            "Summer Co-Op 2027 - Treasury Analyst",
+        ):
+            with self.subTest(title=title):
+                self.assertEqual(tier(title), OTHER)
+
+    def test_non_tech_roles_go_to_other(self):
+        for title in ("Strategy Intern", "FP&A Intern, T&O",
+                      "Student HSE Coordinator", "Bid Management intern"):
+            with self.subTest(title=title):
+                self.assertEqual(tier(title), OTHER)
+
+    def test_tech_roles_stay_loose(self):
+        for title in (
+            "Cloud Engineer Intern",
+            "Data Intern - Product Analytics - Summer 2027",
+            "Information Security Analyst Summer 2027 Co-op",
+            "Software Tester Intern",
+            "Technology Business Analyst Intern",
+            "IT Support Co-op",
+            "R&D Co-op Student, Summer 2027",
+            "Corporate Applications Intern",
+        ):
+            with self.subTest(title=title):
+                self.assertEqual(tier(title), LOOSE)
+
+    def test_canada_without_province_is_also_gated(self):
+        self.assertEqual(tier("Strategy Intern", location="Canada"), OTHER)
+        self.assertEqual(tier("Software Developer Co-op", location="Canada"), LOOSE)
+
+    def test_ai_title_ignores_the_tech_gate(self):
+        self.assertEqual(tier("AI Strategy Intern"), STRICT)
+
+    def test_part_time_ai_role_is_not_a_store_shift(self):
+        self.assertEqual(tier("Part-Time Machine Learning Intern"), STRICT)
+
+
+class TestUsLocationLeaks(unittest.TestCase):
+
+    def test_street_named_hamilton_is_not_hamilton_ontario(self):
+        loc = r"US-CT-WINDSOR LOCKS-B2 \~ 1 Hamilton Rd \~ BLDG 2"
+        self.assertIsNone(tier("Software Engineer Co-Op (Spring/Summer 2027)", location=loc))
+
+    def test_ontario_california_is_rejected(self):
+        self.assertIsNone(tier("Software Intern", location="ONTARIO, California"))
+
+    def test_real_ontario_cities_still_count(self):
+        for loc in ("Ottawa, ON", "Ottawa", "Brampton, Ontario, CA",
+                    "Toronto, Ontario, Canada", "Kanata"):
+            with self.subTest(loc=loc):
+                self.assertEqual(tier("Software Developer Intern", location=loc), LOOSE)
+
+
+class TestOntarioCities(unittest.TestCase):
+    """The commute area is the whole market: the radar exists for roles
+    reachable from Toronto, so the rest of Canada is noise however good it
+    looks."""
+
+    def test_ontario_locations_reach_strict(self):
+        for location in [
+            "Toronto, ON",
+            "Toronto, Ontario",
+            "Ottawa, ON, Canada",
+            "Mississauga, ON",
+            "Oakville, ON, Canada",
+            "Markham, ON, Canada",
+            "Kanata, Ontario",
+            "Nepean, ON",
+            "Gatineau, QC, Canada",
+            "Burlington, ON",
+            "Greater Toronto Area",
+        ]:
+            with self.subTest(location=location):
+                self.assertEqual(tier("ML Intern", location=location), STRICT)
+
+    def test_other_provinces_are_rejected(self):
+        for location in [
+            "Montréal, QC",
+            "Vancouver, British Columbia",
+            "Calgary, AB",
+            "Burnaby, BC, Canada",
+            "Longueuil, QC, Canada",
+            "Halifax, Nova Scotia",
+            "Winnipeg, Manitoba",
+            "Acheson, AB, Canada",
+        ]:
+            with self.subTest(location=location):
+                self.assertIsNone(tier("ML Intern", location=location))
+
+
+class TestForeignLocationsRejected(unittest.TestCase):
+    """Regression: these all reached the feed as "location unknown".
+
+    ``_FOREIGN_RE`` knew "united kingdom" but not "UK", and knew ", NY" but
+    not "Texas" or the abbreviations the tracker repos actually publish, so
+    London and San Francisco roles sailed through into the loose tier.
+    """
+
+    def test_foreign_locations_are_rejected(self):
+        for location in [
+            "London, UK",
+            "Texas",
+            "Remote - Texas, United States",
+            "SF",
+            "NYC",
+            "LA",
+            "New York, NY",
+            "Seattle, WA",
+            "Bangalore, India",
+            "Macclesfield, UK",
+            "Grove, Wantage, UK",
+        ]:
+            with self.subTest(location=location):
+                self.assertIsNone(tier("ML Intern", location=location))
+
+
+class TestRemoteScope(unittest.TestCase):
+    """Remote is only in scope when it is remote *in Canada*."""
+
+    def test_remote_in_canada_is_strict(self):
+        """Kinaxis publishes exactly this, and it is workable from Toronto."""
+        self.assertEqual(tier("ML Intern", location="Remote in Canada"), STRICT)
+
+    def test_remote_canada_wording_variants(self):
+        for location in ["Remote, Canada", "Canada (Remote)", "Remote - Canada"]:
+            with self.subTest(location=location):
+                self.assertEqual(tier("ML Intern", location=location), STRICT)
+
+    def test_bare_remote_is_rejected(self):
+        """"Remote" alone names no country, so it cannot be confirmed Canadian."""
+        self.assertIsNone(tier("NLP Intern", location="Remote"))
+
+    def test_remote_elsewhere_in_canada_is_rejected(self):
+        self.assertIsNone(tier("ML Intern", location="Remote - Vancouver, BC"))
+
+    def test_remote_in_usa_is_rejected(self):
+        self.assertIsNone(tier("ML Intern", location="Remote in USA"))
+
+
+class TestCanadianLocationRequired(unittest.TestCase):
+    """Nothing reaches any tier without a positive Ontario or Canada signal.
+
+    Regression: unreadable locations used to be kept in loose in case they
+    were Toronto. In a live run that let 178 rows through, nearly all foreign.
+    """
+
+    def test_blank_location_is_rejected(self):
+        self.assertIsNone(tier("Machine Learning Intern", location=""))
+
+    def test_placeholder_locations_are_rejected(self):
+        for location in ["Multiple Locations", "2 Locations", "Multiple Locations Available"]:
+            with self.subTest(location=location):
+                self.assertIsNone(tier("ML Intern", location=location))
+
+    def test_bare_london_is_rejected(self):
+        """London, Ontario is real, but bare "London" is usually the UK one."""
+        self.assertIsNone(tier("ML Intern", location="London"))
+
+    def test_hybrid_onsite_wording_is_not_read_as_ontario(self):
+        """Regression guard: ", ON" must not match the "on" in "on-site"."""
+        self.assertIsNone(tier("ML Intern", location="Hybrid, on-site"))
+
+    def test_lowercase_on_is_not_the_province(self):
+        """Regression: "on site" and "London, on-site" read as Ontario."""
+        self.assertIsNone(tier("ML Intern", location="Austin, TX | Hybrid, on site"))
+        self.assertIsNone(tier("ML Intern", location="London, on-site"))
+
+    def test_lowercase_prose_is_not_a_state_code(self):
+        """Regression: ", in office" read as Indiana and binned the posting."""
+        self.assertEqual(tier("ML Intern", location="Canada, in office 3 days"), LOOSE)
+
+    def test_qualified_ontario_city_still_matches(self):
+        self.assertEqual(tier("ML Intern", location="Burlington, ON"), STRICT)
+        self.assertEqual(tier("ML Intern", location="Milton, Ontario"), STRICT)
+
+    def test_oracle_three_letter_province_is_ontario(self):
+        """Oracle Cloud Recruiting writes "ONT"; Kingston is ambiguous without it."""
+        self.assertIsNone(tier("ML Intern", location="Kingston, ONT, Canada"))
+        self.assertEqual(tier("ML Intern", location="Toronto, ONT, Canada"), "strict")
+        self.assertIsNone(tier("ML Intern", location="Montreal, QUE, Canada"))
+
+    def test_live_leaks_are_rejected(self):
+        for location in [
+            "Bengaluru", "London, GBR", "Doha, Qatar", "FL JAX 347",
+            "IA-CEDAR RAPIDS", "Remote in US", "DE-Berlin-Trion Building",
+            "PL-Warsaw-Lixa C", "Bucharest", "Dublin", "PRC, Chengdu",
+        ]:
+            with self.subTest(location=location):
+                self.assertIsNone(tier("Software Engineer Intern", location=location))
+
+    def test_bare_canada_is_loose_never_strict(self):
+        verdict = classify(p("ML Intern", location="Canada"))
+        self.assertEqual(verdict.tier, LOOSE)
+        self.assertEqual(verdict.reason, "Canada, province not named")
+
+    def test_bare_canada_off_field_goes_to_other(self):
+        self.assertEqual(tier("Analog Design Intern", location="Canada"), OTHER)
+
+    def test_canada_alongside_a_foreign_place_is_rejected(self):
+        self.assertIsNone(tier("ML Intern", location="New York, NY; Canada"))
+
+    def test_canada_with_past_cycle_is_rejected(self):
+        self.assertIsNone(tier("ML Intern, Fall 2026", location="Canada"))
+
+
+class TestOntarioNameCollisions(unittest.TestCase):
+    """Several Ontario city names exist elsewhere too.
+
+    Regression: John Deere's "Waterloo, IA" is Waterloo, *Iowa*, and a bare
+    ``\\bwaterloo\\b`` read it as Ontario and outranked the ", IA" state code.
+    """
+
+    def test_ontario_namesakes_abroad_are_rejected(self):
+        for location in [
+            "Waterloo, IA",
+            "Waterloo, Iowa",
+            "Hamilton, OH",
+            "Peterborough, England",
+            "Scarborough, ME",
+            "Ottawa, IL",
+            "Richmond Hill, GA",
+            "Sudbury, MA",
+        ]:
+            with self.subTest(location=location):
+                self.assertIsNone(tier("ML Intern", location=location))
+
+    def test_the_ontario_originals_still_reach_strict(self):
+        for location in [
+            "Ottawa, ON",
+            "Ottawa, ON, Canada",
+            "Ottawa, Ontario",
+            "Ottawa, Canada",
+            "Ottawa",
+            "Markham, ON, Canada",
+            "Scarborough, Ontario",
+        ]:
+            with self.subTest(location=location):
+                self.assertEqual(tier("ML Intern", location=location), STRICT)
+
+
+class TestCommuteArea(unittest.TestCase):
+    """Ontario outside the GTA, Hamilton, Waterloo Region and Guelph is too
+    far to commute from Toronto, so it is rejected like another province."""
+
+    def verdict(self, location):
+        return classify(p("ML Intern", location=location))
+
+    def test_gta_towns_are_in_the_commute_area(self):
+        """Regression: these were "no Canadian location" without ", ON"."""
+        for location in [
+            "Aurora", "Thornhill", "Concord", "Stouffville", "Caledon", "Bolton",
+            "King City", "Unionville", "Georgetown", "Halton Hills",
+            "Orangeville", "Bowmanville", "Clarington", "Burlington", "Milton",
+            "Aurora, ON", "Concord, Ontario",
+        ]:
+            with self.subTest(location=location):
+                self.assertEqual(self.verdict(location).tier, STRICT)
+
+    def test_canada_country_code_after_an_ontario_city(self):
+        """Regression: "Markham, CA" read as California."""
+        for location in ["Markham, CA", "Oakville, CA", "Burlington, CA"]:
+            with self.subTest(location=location):
+                self.assertEqual(self.verdict(location).tier, STRICT)
+
+    def test_same_named_us_towns_are_still_rejected(self):
+        for location in [
+            "Concord, CA", "King City, CA", "Aurora, IL", "Aurora, CO",
+            "Burlington, MA", "Burlington, VT", "Milton, MA", "Georgetown, TX",
+            "Cambridge", "Cambridge, MA",
+        ]:
+            with self.subTest(location=location):
+                self.assertIsNone(self.verdict(location).tier)
+
+    def test_far_ontario_is_rejected(self):
+        for location in [
+            "Waterloo, ON", "Hamilton, Canada", "Kitchener, Ontario, Canada", "London, ON",
+            "Kingston, Ontario", "Windsor, ON", "Welland, ON, Canada", "Barrie, ON",
+            "Sudbury, Ontario", "Peterborough, ON",
+        ]:
+            with self.subTest(location=location):
+                verdict = self.verdict(location)
+                self.assertIsNone(verdict.tier)
+                self.assertEqual(verdict.reason, "outside commute area")
+
+    def test_a_commutable_city_alongside_wins(self):
+        """A req open in Waterloo and Toronto is still a Toronto req."""
+        for location in ["Waterloo; Toronto, ON", "London, ON | Ottawa, ON",
+                         "Kitchener, ON, Canada, Mississauga, ON, Canada"]:
+            with self.subTest(location=location):
+                self.assertEqual(self.verdict(location).tier, STRICT)
+
+    def test_province_only_is_kept(self):
+        """Usually the Toronto head office; dropping it would lose real roles."""
+        for location in ["Ontario, Canada", "ON, Canada", "Ontario"]:
+            with self.subTest(location=location):
+                self.assertEqual(self.verdict(location).tier, STRICT)
+
+    def test_remote_from_far_ontario_is_kept(self):
+        self.assertEqual(self.verdict("Remote - Ottawa, ON, Canada").tier, STRICT)
+        self.assertEqual(self.verdict("Remote, Canada").tier, STRICT)
+
+
+if __name__ == "__main__":
+    unittest.main()

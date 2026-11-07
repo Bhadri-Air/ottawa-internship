@@ -1,42 +1,160 @@
 name: radar
 
+# Fetches every source, classifies, and rewrites the listings block of
+# README.md. This is what keeps the feed live with the laptop closed.
+#
+# IMPORTANT: this repo must be PUBLIC. Actions minutes are unlimited only on
+# public repositories; on a private repo this schedule is ~180 runs a month.
+#
+# No secrets are used. The commit is made with the built-in GITHUB_TOKEN.
+
 on:
   schedule:
-    - cron: "23 */4 * * *"   # every 6 hours, off the busy :00 slot
-  workflow_dispatch: {}
+    # Every 4 hours, at :17 rather than :00 -- GitHub queues scheduled runs
+    # and the top of the hour is the congested slot. Timing is best-effort;
+    # nothing is lost, since each run re-fetches everything.
+    - cron: "17 */4 * * *"
+  # Also the one-click way to re-enable the schedule: GitHub disables
+  # scheduled workflows on public repos after 60 days without repository
+  # activity. The README commits below normally count as activity.
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "What to run"
+        required: true
+        default: run
+        type: choice
+        options: [run, check, seed, test]
 
-permissions:
-  contents: write
-
+# Runs must never overlap: two runs fetching at once would both see the same
+# posting as new, and both would try to push a conflicting README.
 concurrency:
   group: radar
   cancel-in-progress: false
 
-jobs:
-  run:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
+permissions:
+  contents: write
 
-      - uses: actions/setup-python@v5
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # A shallow clone makes the rebase in the commit step unreliable.
+          # The history is cheap to fetch because only the feed and the
+          # generated source list are committed.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
 
-      - name: Test the filters before publishing anything
-        run: python -m unittest discover -s tests -v
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Scrape and rebuild the feed
-        run: python radar.py
+      # Chromium is for careers pages whose job list is drawn by JavaScript.
+      # Unit tests mock the browser and never launch it.
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
 
-      - name: Commit if the feed changed
+      # A classifier bug would quietly publish a garbled feed, so the tests
+      # gate the run rather than reporting after the fact.
+      - name: Unit tests
+        run: python -m unittest discover -s tests
+
+      # Run-to-run state: seen postings, per-source health, HTTP etags. Cached
+      # rather than committed -- the DB is ~5 MB of SQLite and committing it
+      # on every run would add gigabytes of binary history a year. Cache keys
+      # are immutable, so the key must be unique per run and the prefix in
+      # restore-keys is what actually restores the newest one.
+      #
+      # The v2 prefix abandons the caches built under the Canada-wide location
+      # rule: rows are stored with the tier they were classified into, so
+      # postings recorded before the Ontario-only rule would keep showing.
+      # v3 does the same for the "other fields" tier and the new-grad cap:
+      # older rows would keep analog-design roles in loose and new-grad roles
+      # in strict. v4 drops rows kept with no Canadian location, which the
+      # stricter location gate now rejects. v5 drops rows from Ontario outside
+      # the commute area (Ottawa, London, Kingston, ...), which are now
+      # rejected. v6 reclassifies for Summer 2027 as a target, the new GTA
+      # towns and Canada-only sources: those rows were stored as demoted or
+      # rejected. After a prefix bump, dispatch `seed` once, then `run`.
+      #
+      # A cache miss is survivable: every run re-fetches every source, and
+      # publish dates come from the sources themselves. The only visible
+      # effect is that postings with no publish date are re-dated as first
+      # seen today.
+      - name: Restore radar state
+        uses: actions/cache@v6
+        with:
+          path: radar.db
+          key: radar-db-v6-${{ github.run_id }}
+          restore-keys: |
+            radar-db-v6-
+
+      - name: Run radar
+        env:
+          # Not interpolated directly into the script below: an expression
+          # pasted into a shell command is how workflows get injected.
+          MODE: ${{ inputs.mode || 'run' }}
+          # Renders README.md only. The HTML dashboard is a local-only channel
+          # and nothing on the runner would open it.
+          RADAR_NOTIFIERS: readme
+          # Tracker listings and job titles carry emoji, and the runner's
+          # default encoding cannot always encode them.
+          PYTHONIOENCODING: utf-8
         run: |
-          git config user.name  "ottawa-radar-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md state.json
-          if git diff --cached --quiet; then
-            echo "Nothing new."
-          else
-            git commit -m "radar: update feed"
-            git push
+          case "$MODE" in
+            run)   python radar.py ;;
+            check) python radar.py --check ;;
+            seed)  python radar.py --seed ;;
+            test)  python radar.py --test ;;
+            *)     echo "::error::unknown mode '$MODE'"; exit 1 ;;
+          esac
+
+      # Where postings were dropped, so a filter that bins good roles shows up
+      # in the run log instead of as a quiet feed.
+      - name: Rejection reasons
+        if: always()
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python radar.py --reasons || true
+
+      - name: Commit the feed
+        run: |
+          # Authored as the repo owner, so feed updates show on that profile.
+          git config user.name  "Bhadri-Air"
+          git config user.email "bhadricprasad2023@gmail.com"
+
+          # A quiet run leaves the README byte-identical, so there is nothing
+          # to commit. Without this the schedule would push 6 identical
+          # READMEs a day.
+          if git diff --quiet -- README.md auto_companies.py; then
+            echo "Feed unchanged; nothing to commit."
+            exit 0
           fi
+
+          git add README.md auto_companies.py
+          git commit --quiet -m "radar: $(TZ=America/Toronto date '+%Y-%m-%d %H:%M') Eastern"
+
+          # Commit once, then retry only the network half. Committing inside
+          # the loop would stack duplicate commits on every rejection.
+          for attempt in 1 2 3 4 5; do
+            if git push --quiet; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected, rebasing (attempt $attempt)."
+            if ! git pull --rebase --autostash --quiet; then
+              git rebase --abort 2>/dev/null || true
+              echo "::warning::Rebase failed; the next run will regenerate the feed."
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+
+          echo "::warning::Could not push the feed after 5 attempts."

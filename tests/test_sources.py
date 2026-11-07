@@ -1,0 +1,670 @@
+"""Tests for source parsing that shapes what reaches the feed."""
+
+import os
+import sys
+import unittest
+from unittest import mock
+
+import requests
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import sources  # noqa: E402
+
+
+def item(**overrides):
+    base = {
+        "id": "abc",
+        "company_name": "Royal Bank of Canada",
+        "title": "Data Engineer Co-op",
+        "locations": ["Toronto, ON, Canada"],
+        "url": "https://example.com/j/abc",
+        "active": True,
+    }
+    base.update(overrides)
+    return base
+
+
+def title_of(**overrides):
+    [post] = sources._tracker_from_json("t", "o/r", [item(**overrides)])
+    return post.title
+
+
+class TestTrackerSeasons(unittest.TestCase):
+    """Regression: "Data Engineer Co-op, N/A" showed up in the live feed."""
+
+    def test_placeholder_season_is_not_appended(self):
+        for placeholder in ["N/A", "n/a", "TBD", "-", "", None, "Unknown"]:
+            with self.subTest(season=placeholder):
+                self.assertEqual(title_of(season=placeholder), "Data Engineer Co-op")
+
+    def test_placeholder_inside_terms_list_is_dropped(self):
+        self.assertEqual(
+            title_of(season="N/A", terms=["N/A", "Summer 2027"]),
+            "Data Engineer Co-op, Summer 2027",
+        )
+
+    def test_real_season_is_appended(self):
+        self.assertEqual(
+            title_of(season="Summer 2027"), "Data Engineer Co-op, Summer 2027"
+        )
+
+
+class TestSpeedyapplyTable(unittest.TestCase):
+    """speedyapply names its apply-link column "Posting", not "Apply"."""
+
+    README = (
+        "| Company | Position | Location | Salary | Posting | Age |\n"
+        "|---|---|---|---|---|---|\n"
+        '| <a href="https://www.lyft.com"><strong>Lyft</strong></a> '
+        "| Applied Scientist Intern - Summer 2027 | Toronto, ON | $58/hr "
+        '| <a href="https://app.careerpuck.com/job-board/lyft/job/88"><img '
+        'src="https://i.imgur.com/x.png" alt="Apply" width="70"/></a> | 0d |\n'
+    )
+
+    def test_row_is_parsed_with_the_apply_link(self):
+        [row] = sources.parse_tracker_readme(self.README)
+        self.assertEqual(row["company"], "Lyft")
+        self.assertEqual(row["title"], "Applied Scientist Intern - Summer 2027")
+        self.assertEqual(row["location"], "Toronto, ON")
+        self.assertEqual(row["url"], "https://app.careerpuck.com/job-board/lyft/job/88")
+        self.assertGreater(row["posted_at"], 0)
+
+
+class TestCareersPageJsonLd(unittest.TestCase):
+    """Careers pages that embed schema.org JobPosting data yield real rows."""
+
+    PAGE = """<html><head>
+    <script type="application/ld+json">
+    {"@context": "https://schema.org", "@graph": [
+      {"@type": "Organization", "name": "Acme"},
+      {"@type": "JobPosting", "title": "Machine Learning Intern",
+       "url": "/careers/ml-intern", "identifier": {"value": "R123"},
+       "datePosted": "2026-09-25", "employmentType": "INTERN",
+       "jobLocation": {"@type": "Place", "address": {
+         "addressLocality": "Toronto", "addressRegion": "ON",
+         "addressCountry": "CA"}}},
+      {"@type": "JobPosting", "title": "Research Intern",
+       "jobLocationType": "TELECOMMUTE",
+       "applicantLocationRequirements": {"@type": "Country", "name": "Canada"}}
+    ]}
+    </script></head><body><a href="/careers/other">Other link</a></body></html>"""
+
+    def setUp(self):
+        self.posts = sources._jsonld_postings(
+            "Acme", "https://acme.ai/careers/", self.PAGE
+        )
+
+    def test_job_postings_are_extracted(self):
+        self.assertEqual([p.title for p in self.posts],
+                         ["Machine Learning Intern", "Research Intern"])
+
+    def test_fields_are_mapped(self):
+        post = self.posts[0]
+        self.assertEqual(post.url, "https://acme.ai/careers/ml-intern")
+        self.assertEqual(post.location, "Toronto, ON, CA")
+        self.assertEqual(post.uid, "html:Acme:R123")
+        self.assertGreater(post.posted_at, 0)
+
+    def test_remote_in_canada_is_carried(self):
+        self.assertEqual(self.posts[1].location, "Remote, Canada")
+
+    def test_extracted_posting_classifies(self):
+        from core import STRICT, classify
+
+        self.assertEqual(classify(self.posts[0]).tier, STRICT)
+
+    def test_html_links_prefers_structured_data(self):
+        http = mock.Mock()
+        http.text.return_value = self.PAGE
+        posts = sources.html_links(http, "Acme", "https://acme.ai/careers/")
+        self.assertNotIn("Other link", [p.title for p in posts])
+        self.assertEqual(len(posts), 2)
+
+    def test_page_without_jsonld_falls_back_to_links(self):
+        http = mock.Mock()
+        http.text.return_value = '<a href="/careers/job/1">ML Intern</a>'
+        posts = sources.html_links(http, "Acme", "https://acme.ai/careers/")
+        self.assertEqual([p.title for p in posts], ["ML Intern"])
+
+    def test_link_diff_keeps_subdomains_and_drops_lookalikes(self):
+        http = mock.Mock()
+        http.text.return_value = (
+            '<a href="https://www.acme.ai/team/1">ML Intern</a>'
+            '<a href="https://notacme.ai/team/2">Lookalike</a>'
+        )
+        posts = sources.html_links(http, "Acme", "https://careers.acme.ai/")
+        self.assertEqual([p.title for p in posts], ["ML Intern"])
+        posts = sources.html_links(http, "Acme", "https://acme.ai/")
+        self.assertEqual([p.title for p in posts], ["ML Intern"])
+
+    def test_malformed_jsonld_is_ignored(self):
+        page = '<script type="application/ld+json">{not json</script>'
+        self.assertEqual(sources._jsonld_postings("Acme", "https://a.ai/", page), [])
+
+
+class TestBrowserPortals(unittest.TestCase):
+    """JavaScript careers pages are parsed from rendered HTML, never launched."""
+
+    def test_rendered_html_uses_the_jobposting_parser(self):
+        http = mock.Mock()
+        with mock.patch.object(sources, "render_portal", return_value=TestCareersPageJsonLd.PAGE):
+            posts = sources.html_links(
+                http, "Acme", "https://acme.ai/careers/", browser=True
+            )
+        http.text.assert_not_called()
+        self.assertEqual(
+            [p.title for p in posts],
+            ["Machine Learning Intern", "Research Intern"],
+        )
+
+    def test_rendered_page_without_jsonld_keeps_the_link_text_as_location(self):
+        http = mock.Mock()
+        page = '<a href="https://acme.ai/careers/job/1">ML Intern, Toronto, ON</a>'
+        with mock.patch.object(sources, "render_portal", return_value=page):
+            posts = sources.html_links(
+                http, "Acme", "https://acme.ai/careers/", browser=True
+            )
+        self.assertEqual(posts[0].title, "ML Intern, Toronto, ON")
+        self.assertEqual(posts[0].location, "ML Intern, Toronto, ON")
+
+    def test_section_menu_links_are_not_postings(self):
+        http = mock.Mock()
+        http.text.return_value = (
+            '<a href="https://jobs.example.com/go/students">Student &amp; New Grad</a>'
+            '<a href="https://jobs.example.com/early">Early Careers</a>'
+            '<a href="https://jobs.example.com/job/7">Software Developer Co-op (Summer 2027)</a>'
+        )
+        posts = sources.html_links(http, "Acme", "https://jobs.example.com/search")
+        self.assertEqual([p.title for p in posts], ["Software Developer Co-op (Summer 2027)"])
+
+    def test_failed_render_propagates(self):
+        http = mock.Mock()
+        with mock.patch.object(
+            sources, "render_portal", side_effect=RuntimeError("blocked")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "blocked"):
+                sources.html_links(http, "Acme", "https://acme.ai/careers/", browser=True)
+        http.text.assert_not_called()
+
+    def test_plain_html_does_not_open_a_browser(self):
+        http = mock.Mock()
+        http.text.return_value = TestCareersPageJsonLd.PAGE
+        with mock.patch.object(sources, "render_portal") as render:
+            sources.html_links(http, "Acme", "https://acme.ai/careers/")
+        render.assert_not_called()
+
+    def test_browser_flag_reaches_the_fetcher(self):
+        import radar
+
+        entries = [
+            {
+                "name": "Shopify",
+                "platform": "html",
+                "token": "https://shop.example/careers",
+                "browser": True,
+                "ai_native": False,
+            },
+            {
+                "name": "Vector Institute",
+                "platform": "html",
+                "token": "https://vector.example/",
+                "ai_native": True,
+            },
+        ]
+        with mock.patch.object(radar.cfg, "COMPANIES", entries), mock.patch.object(
+            radar.cfg, "AUTO_COMPANIES", []
+        ), mock.patch.object(radar.cfg, "TRACKERS", []), \
+                mock.patch.object(radar.cfg, "PORTFOLIO_BOARDS", []):
+            tasks = radar.build_tasks(mock.Mock())
+        flags = {label: getattr(thunk, "browser", False) for label, thunk, _ai in tasks}
+        self.assertEqual(flags["Shopify [html]"], True)
+        self.assertEqual(flags["Vector Institute [html]"], False)
+
+        shop = next(task for task in tasks if task[0] == "Shopify [html]")
+        with mock.patch.object(sources, "html_links", return_value=[]) as links:
+            shop[1]()
+        self.assertEqual(links.call_args.kwargs["browser"], True)
+
+    def test_failed_portal_is_recorded_as_a_source_error(self):
+        import tempfile
+
+        import radar
+        from core import Store
+
+        store = Store(os.path.join(tempfile.mkdtemp(), "radar.db"))
+        try:
+            def boom():
+                raise RuntimeError("blocked")
+
+            boom.browser = True
+            with mock.patch.object(
+                radar, "build_tasks",
+                return_value=[("Shopify [html]", boom, False)],
+            ), mock.patch.object(radar.cfg, "DISCOVERY_MAX_BOARDS", 0):
+                posts, errors = radar.fetch_all(mock.Mock(), store, quiet=True)
+        finally:
+            store.close()
+        self.assertEqual(posts, [])
+        self.assertIn("blocked", errors["Shopify [html]"])
+
+
+class TestAmazon(unittest.TestCase):
+    JOB = {
+        "id_icims": "10535280",
+        "title": "ML Systems Software Development Engineer Intern, Annapurna Labs - 2027",
+        "normalized_location": "Toronto, Ontario, CAN",
+        "location": "CA, ON, Toronto",
+        "job_path": "/en/jobs/10535280/ml-systems-sde-intern",
+        "posted_date": "September  9, 2026",
+    }
+
+    def test_postings_are_merged_across_search_terms(self):
+        http = mock.Mock()
+        http.json.return_value = {"hits": 1, "jobs": [self.JOB]}
+        [post] = sources.amazon(http, "Amazon", "CAN")
+        self.assertEqual(http.json.call_count, len(sources.WORKDAY_TERMS))
+        self.assertEqual(post.uid, "amazon:10535280")
+        self.assertEqual(
+            post.url, "https://www.amazon.jobs/en/jobs/10535280/ml-systems-sde-intern"
+        )
+        self.assertIn("Toronto, Ontario", post.location)
+
+    def test_padded_date_is_parsed(self):
+        self.assertGreater(sources._amazon_date("September  9, 2026"), 0)
+        self.assertEqual(sources._amazon_date("20 days"), 0)
+
+
+class TestOracle(unittest.TestCase):
+    """Shapes from Definity's Oracle Cloud Recruiting search."""
+
+    TOKEN = "https://hdks.fa.ca2.oraclecloud.com|CX_1"
+    REQ = {
+        "Id": "9347", "Title": "Claims Assistant - Summer 2027 Co-op/Intern",
+        "PrimaryLocation": "Waterloo, ONT, Canada", "PostedDate": "2026-09-18",
+        "secondaryLocations": [{"Name": "Toronto, ONT, Canada"}], "WorkplaceType": "",
+    }
+
+    def test_requisition_becomes_a_posting(self):
+        http = mock.Mock()
+        http.json.return_value = {"items": [{"TotalJobsCount": 1, "requisitionList": [self.REQ]}]}
+        [post] = sources.oracle(http, "Definity", self.TOKEN)
+        self.assertEqual(http.json.call_count, 1 + len(sources.SEARCH_TERMS))
+        self.assertEqual(post.uid, "oracle:hdks.fa.ca2.oraclecloud.com:9347")
+        self.assertEqual(post.url, "https://hdks.fa.ca2.oraclecloud.com/hcmUI/"
+                                   "CandidateExperience/en/sites/CX_1/job/9347")
+        self.assertEqual(post.location, "Waterloo, ONT, Canada, Toronto, ONT, Canada")
+        self.assertGreater(post.posted_at, 0)
+        finder = http.json.call_args.kwargs["params"]["finder"]
+        self.assertIn("siteNumber=CX_1", finder)
+        self.assertNotIn("selectedLocationsFacet", finder)
+
+    def test_search_is_limited_to_the_canada_facet(self):
+        facets = {"items": [{"locationsFacet": [
+            {"Id": 300000007173023, "Name": "ONT, Canada"},
+            {"Id": 300000000228588, "Name": "Canada"},
+        ]}]}
+        reqs = {"items": [{"TotalJobsCount": 1, "requisitionList": [
+            dict(self.REQ, PrimaryLocation="Remote", secondaryLocations=[])]}]}
+        http = mock.Mock()
+        http.json.side_effect = [facets] + [reqs] * len(sources.SEARCH_TERMS)
+        [post] = sources.oracle(http, "Definity", self.TOKEN)
+        self.assertIn("facetsList=LOCATIONS", http.json.call_args_list[0].kwargs["params"]["finder"])
+        finder = http.json.call_args.kwargs["params"]["finder"]
+        self.assertIn("selectedLocationsFacet=300000000228588", finder)
+        self.assertEqual(post.raw["country"], "Canada")
+
+
+class TestSmartRecruiters(unittest.TestCase):
+    def test_only_canadian_postings_are_requested(self):
+        http = mock.Mock()
+        http.json.return_value = {"totalFound": 1, "content": [{
+            "id": "744", "name": "ML Intern",
+            "location": {"city": "", "country": "ca", "remote": True}}]}
+        [post] = sources.smartrecruiters(http, "Ubisoft", "ubisoft2")
+        self.assertIn("&country=ca", http.json.call_args[0][0])
+        self.assertEqual(post.raw["country"], "Canada")
+
+
+class TestTeamtailor(unittest.TestCase):
+    def test_json_feed_items_are_read(self):
+        """VitalBio's jobs.json is a JSON Feed; the place is in _jobposting."""
+        http = mock.Mock()
+        http.json.return_value = {"version": "https://jsonfeed.org/version/1.1", "items": [{
+            "id": "5b39", "title": "Automation Controls Engineer",
+            "url": "https://vitalbio.na.teamtailor.com/jobs/728187-automation",
+            "date_published": "2026-10-28T17:32:20-04:00",
+            "_jobposting": {"jobLocation": [{"address": {
+                "addressLocality": "Oakville", "addressRegion": None, "addressCountry": "CA"}}]},
+        }]}
+        [post] = sources.teamtailor(http, "VitalBio", "vitalbio.na")
+        self.assertEqual(post.title, "Automation Controls Engineer")
+        self.assertEqual(post.location, "Oakville, CA")
+        self.assertEqual(post.url, "https://vitalbio.na.teamtailor.com/jobs/728187-automation")
+        self.assertGreater(post.posted_at, 0)
+
+
+class TestJibe(unittest.TestCase):
+    """Shapes from AMD's careers site (iCIMS Jibe)."""
+
+    JOB = {"data": {
+        "req_id": "91368", "title": "Short Term 2027 Software Engineering Intern/Co-Op",
+        "full_location": "MARKHAM, Canada", "city": "MARKHAM", "state": "Ontario",
+        "country": "Canada", "posted_date": "2026-09-01T07:11:00+0000",
+        "canonical_url": "https://careers.amd.com/jobs/91368?lang=en-us",
+        "description": "Offices in Austin, Texas and Toronto.",
+    }}
+
+    def test_job_becomes_a_posting_without_the_description(self):
+        http = mock.Mock()
+        http.json.return_value = {"totalCount": 1, "jobs": [self.JOB]}
+        [post] = sources.jibe(http, "AMD", "https://careers.amd.com/")
+        self.assertEqual(post.uid, "jibe:careers.amd.com:91368")
+        self.assertEqual(post.location, "MARKHAM, Canada, MARKHAM, Ontario, Canada")
+        self.assertNotIn("description", post.raw)
+        self.assertGreater(post.posted_at, 0)
+
+    def test_request_asks_for_english_us(self):
+        http = mock.Mock()
+        http.json.return_value = {}
+        sources.jibe(http, "AMD", "https://careers.amd.com")
+        kwargs = http.json.call_args.kwargs
+        self.assertEqual(kwargs["params"]["location"], "Canada")
+        self.assertTrue(kwargs["headers"]["Accept-Language"].startswith("en-US"))
+
+
+class TestEightfold(unittest.TestCase):
+    """Shapes from Qualcomm's PCSX search."""
+
+    POS = {"id": 446721064018, "name": "FY27 Intern - Machine Learning Compiler Intern",
+           "locations": ["Markham, Ontario, Canada"], "postedTs": 1789603200,
+           "positionUrl": "/careers/job/446721064018", "workLocationOption": "onsite"}
+
+    def test_position_becomes_a_posting(self):
+        http = mock.Mock()
+        http.json.return_value = {"data": {"count": 1, "positions": [self.POS]}}
+        [post] = sources.eightfold(http, "Qualcomm", "qualcomm.eightfold.ai|qualcomm.com")
+        self.assertEqual(post.uid, "eightfold:qualcomm.eightfold.ai:446721064018")
+        self.assertEqual(post.url, "https://qualcomm.eightfold.ai/careers/job/446721064018")
+        self.assertEqual(post.location, "Markham, Ontario, Canada")
+        self.assertEqual(http.json.call_args.kwargs["params"]["domain"], "qualcomm.com")
+
+    def test_domain_defaults_to_tenant_dot_com(self):
+        http = mock.Mock()
+        http.json.return_value = {}
+        sources.eightfold(http, "Qualcomm", "qualcomm.eightfold.ai")
+        self.assertEqual(http.json.call_args.kwargs["params"]["domain"], "qualcomm.com")
+
+
+class TestIcims(unittest.TestCase):
+    """Both card templates seen live: Kinaxis ("Location") and Mackenzie ("Job Locations")."""
+
+    KINAXIS = """
+<li class="iCIMS_JobCardItem"><div class="row">
+<div class="col-xs-6 header left"><span class="sr-only field-label">Location</span>
+<span >
+CA-Remote</span></div>
+<div class="col-xs-12 title">
+<a href="https://careers-kinaxis.icims.com/jobs/35377/co-op-intern-developer%2c-ai/job?in_iframe=1" class="iCIMS_Anchor" title="35377">
+<span class="sr-only field-label">Title</span><h3 >
+Co-op/Intern Developer, AI Innovation</h3></a></div>
+<dl class="iCIMS_JobHeaderGroup"><div class="iCIMS_JobHeaderTag">
+<dt class="iCIMS_JobHeaderField">Posted Date</dt>
+<dd class="iCIMS_JobHeaderData"><span title="9/29/2026 5:30 PM">1 day ago</span></dd></div>
+<div class="iCIMS_JobHeaderTag"><dt class="iCIMS_JobHeaderField">
+<span class="sr-only field-label">Additional Locations</span></dt>
+<dd class="iCIMS_JobHeaderData"><span >
+CA-ON-Ottawa | CA-ON-Toronto</span></dd></div></dl>
+</div></li>
+<link rel="next" href="https://careers-kinaxis.icims.com/jobs/search?pr=1&amp;in_iframe=1" />"""
+
+    MACKENZIE = """
+<li class="iCIMS_JobCardItem"><div class="row">
+<div class="col-xs-6 header left"><span class="sr-only field-label">Job Locations</span>
+<span >
+CA-ON-Greater Toronto Area</span></div>
+<div class="col-xs-6 header right"><span class="sr-only field-label">Posted Date</span>
+<span title="9/30/2026 3:08 PM">
+3 hours ago</span></div>
+<div class="col-xs-12 title">
+<a href="https://careersen-mackenzieinvestments.icims.com/jobs/6014/winter-intern/job?in_iframe=1" class="iCIMS_Anchor" title="6014">
+<span class="sr-only field-label">Job Title</span><h3 >
+Winter Intern 2027 - AI Strategy &amp; Enablement</h3></a></div>
+</div></li>"""
+
+    def test_location_codes_are_spelled_out(self):
+        self.assertEqual(sources._icims_place("CA-ON-Ottawa"), "Ottawa, ON, Canada")
+        self.assertEqual(sources._icims_place("CA-Remote"), "Remote, Canada")
+        self.assertEqual(sources._icims_place("Toronto"), "Toronto")
+
+    def test_first_template(self):
+        [card] = sources._icims_cards(self.KINAXIS)
+        self.assertEqual(card["id"], "35377")
+        self.assertEqual(card["title"], "Co-op/Intern Developer, AI Innovation")
+        self.assertEqual(card["location"],
+                         "Remote, Canada, Ottawa, ON, Canada, Toronto, ON, Canada")
+        self.assertNotIn("in_iframe", card["url"])
+        self.assertGreater(card["posted_at"], 0)
+
+    def test_second_template(self):
+        [card] = sources._icims_cards(self.MACKENZIE)
+        self.assertEqual(card["title"], "Winter Intern 2027 - AI Strategy & Enablement")
+        self.assertEqual(card["location"], "Greater Toronto Area, ON, Canada")
+        self.assertGreater(card["posted_at"], 0)
+
+    def test_pages_until_no_next_link_with_own_user_agent(self):
+        http = mock.Mock()
+        http.text.side_effect = [self.KINAXIS, self.MACKENZIE]
+        posts = sources.icims(http, "Kinaxis", "https://careers-kinaxis.icims.com")
+        self.assertEqual(http.text.call_count, 2)
+        self.assertEqual(len(posts), 2)
+        self.assertNotIn("KHTML", http.text.call_args.kwargs["headers"]["User-Agent"])
+
+
+class TestWorkdayPagination(unittest.TestCase):
+    def test_pages_past_the_second_are_fetched(self):
+        """Regression: Workday sends ``total`` on the first page only and 0
+        after it, so every search stopped at 40 results."""
+        pages = iter(range(1000))
+
+        def page(*_args, json, **_kwargs):
+            resp = mock.Mock()
+            jobs = [
+                {"title": "ML Intern", "bulletFields": [f"R{next(pages)}"],
+                 "externalPath": "/job/x"}
+                for _ in range(sources.WORKDAY_PAGE)
+            ]
+            resp.json.return_value = {
+                "total": 100 if json["offset"] == 0 else 0, "jobPostings": jobs,
+            }
+            return resp
+
+        http = mock.Mock()
+        http.request.side_effect = page
+        with mock.patch.object(sources, "WORKDAY_TERMS", ["intern"]):
+            posts = sources.workday(
+                http, "Acme", "https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/Ext/jobs"
+            )
+        self.assertEqual(http.request.call_count, 1 + 5)
+        self.assertEqual(len(posts), 100)
+
+
+class TestWorkdayCanadaFacet(unittest.TestCase):
+    BASE = "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers/jobs"
+
+    def respond(self, facets):
+        payloads = []
+
+        def request(*_args, json, **_kwargs):
+            payloads.append(json)
+            resp = mock.Mock()
+            if json["searchText"] == "":
+                resp.json.return_value = {"total": 900, "facets": facets, "jobPostings": []}
+            else:
+                resp.json.return_value = {"total": 1, "jobPostings": [{
+                    "title": "ML Intern", "bulletFields": ["R1"], "externalPath": "/job/x",
+                    "locationsText": "Remote"}]}
+            return resp
+
+        http = mock.Mock()
+        http.request.side_effect = request
+        with mock.patch.object(sources, "WORKDAY_TERMS", ["intern"]):
+            posts = sources.workday(http, "TD", self.BASE)
+        return payloads, posts
+
+    def test_country_facet_is_applied_and_rows_marked(self):
+        facets = [{"facetParameter": "locationMainGroup", "values": [
+            {"facetParameter": "locationCountry", "values": [
+                {"descriptor": "United States of America", "id": "us1"},
+                {"descriptor": "Canada", "id": "ca1"}]},
+        ]}]
+        payloads, [post] = self.respond(facets)
+        self.assertEqual(payloads[-1]["appliedFacets"], {"locationCountry": ["ca1"]})
+        self.assertEqual(post.raw["country"], "Canada")
+
+    def test_country_named_facet_wins_over_a_hierarchy(self):
+        facets = [
+            {"facetParameter": "locationHierarchy1", "values": [{"descriptor": "Canada", "id": "h"}]},
+            {"facetParameter": "Location_Country", "values": [{"descriptor": "Canada", "id": "c"}]},
+        ]
+        payloads, _ = self.respond(facets)
+        self.assertEqual(payloads[-1]["appliedFacets"], {"Location_Country": ["c"]})
+
+    def test_a_city_is_not_the_country(self):
+        """Intel only offers "Canada, Toronto"; that would hide other cities."""
+        facets = [{"facetParameter": "locations", "values": [
+            {"descriptor": "Canada, Toronto", "id": "t"}]}]
+        payloads, [post] = self.respond(facets)
+        self.assertEqual(payloads[-1]["appliedFacets"], {})
+        self.assertNotIn("country", post.raw)
+
+
+class TestBadgeLinks(unittest.TestCase):
+    """Regression: CIBC's strict hit linked to a shields.io badge, not the job."""
+
+    def test_badge_wrapped_link_resolves_to_the_posting(self):
+        cell = (" [![Apply](https://img.shields.io/badge/-Apply-blue?style=for-the-badge)]"
+                "(https://cibc.wd3.myworkdayjobs.com/campus/job/Toronto-ON/AI_2619748) ")
+        self.assertEqual(
+            sources._cell_url(cell),
+            "https://cibc.wd3.myworkdayjobs.com/campus/job/Toronto-ON/AI_2619748",
+        )
+
+    def test_html_badge_resolves_to_the_href(self):
+        cell = ('<a href="https://jobs.example.com/1"><img '
+                'src="https://i.imgur.com/JpkfjIq.png" alt="Apply"/></a>')
+        self.assertEqual(sources._cell_url(cell), "https://jobs.example.com/1")
+
+    def test_plain_markdown_link(self):
+        self.assertEqual(sources._cell_url("[Apply](https://e.com/j/2)"), "https://e.com/j/2")
+
+    def test_image_only_cell_has_no_url(self):
+        self.assertEqual(sources._cell_url("![x](https://img.shields.io/badge/x)"), "")
+
+
+class TestWorkdayMultiLocation(unittest.TestCase):
+    """Regression: TD's Summer 2027 SWE co-op showed only "2 Locations"."""
+
+    BASE = "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers/jobs"
+
+    def make(self, title, location, path="/job/Toronto/X_R1"):
+        from core import Posting
+
+        return Posting(company="TD", title=title, location=location, url="u",
+                       uid=f"workday:{path}", raw={"externalPath": path})
+
+    def test_multi_location_student_role_is_resolved(self):
+        http = mock.Mock()
+        http.json.return_value = {"jobPostingInfo": {
+            "location": "Toronto, Ontario",
+            "additionalLocations": ["Mississauga, Ontario"],
+            "country": {"descriptor": "Canada"},
+        }}
+        post = self.make("Software Engineer Intern/Co-op (Summer 2027)", "2 Locations")
+        sources._resolve_workday_locations(http, self.BASE, [post])
+        http.json.assert_called_once_with(
+            "https://td.wd3.myworkdayjobs.com/wday/cxs/td/TD_Bank_Careers/job/Toronto/X_R1"
+        )
+        self.assertEqual(post.location, "Toronto, Ontario, Mississauga, Ontario, Canada")
+
+    def test_single_location_and_non_student_roles_are_not_fetched(self):
+        http = mock.Mock()
+        posts = [self.make("Software Engineer Intern", "Toronto, Ontario"),
+                 self.make("Senior Engineer", "3 Locations")]
+        sources._resolve_workday_locations(http, self.BASE, posts)
+        http.json.assert_not_called()
+
+    def test_title_naming_a_live_term_is_resolved(self):
+        http = mock.Mock()
+        http.json.return_value = {"jobPostingInfo": {"location": "Toronto, Ontario"}}
+        post = self.make("ML Engineer - Summer 2027", "2 Locations")
+        sources._resolve_workday_locations(http, self.BASE, [post])
+        self.assertEqual(post.location, "Toronto, Ontario")
+
+    def test_detail_calls_are_capped(self):
+        http = mock.Mock()
+        http.json.return_value = {}
+        posts = [self.make("Intern", "2 Locations", f"/job/{i}")
+                 for i in range(sources.WORKDAY_DETAIL_CAP + 10)]
+        sources._resolve_workday_locations(http, self.BASE, posts)
+        self.assertEqual(http.json.call_count, sources.WORKDAY_DETAIL_CAP)
+
+
+class TestSniffNewPlatforms(unittest.TestCase):
+    def test_signatures_become_adapter_tokens(self):
+        html = """
+        <a href="https://careers-kinaxis.icims.com/jobs/intro">Jobs</a>
+        <script src="https://static.icims.com/x.js"></script>
+        <a href="https://qualcomm.eightfold.ai/careers">Careers</a>
+        <a href="https://hdks.fa.ca2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/requisitions">Apply</a>
+        """
+        hits = sources._sniff_hits("https://www.example.com/careers", html)
+        self.assertIn(("icims", "https://careers-kinaxis.icims.com"), hits)
+        self.assertIn(("eightfold", "qualcomm.eightfold.ai|qualcomm.com"), hits)
+        self.assertIn(("oracle", "https://hdks.fa.ca2.oraclecloud.com|CX_1"), hits)
+        self.assertNotIn(("icims", "https://static.icims.com"), hits)
+
+    def test_jibe_board_is_the_page_host(self):
+        html = '<script src="https://app.jibecdn.com/prod/search.js"></script>'
+        hits = sources._sniff_hits("https://careers.amd.com/careers-home/jobs", html)
+        self.assertEqual(hits, [("jibe", "https://careers.amd.com")])
+
+    def test_sniff_boards_drops_platforms_without_an_adapter(self):
+        http = mock.Mock()
+        http.text.return_value = '<a href="https://acme.successfactors.com/career">x</a>'
+        self.assertEqual(sources.sniff_boards(http, "https://acme.com/careers"), [])
+
+
+class TestProbe(unittest.TestCase):
+    """Only boards that actually carry postings are reported as hits."""
+
+    def run_probe(self, adapters):
+        def fail(*_):
+            raise requests.HTTPError("404")
+
+        patched = {p: adapters.get(p, fail) for p in sources.PROBE_PLATFORMS}
+        with mock.patch.dict(sources.ADAPTERS, patched):
+            return sources.probe(None, "deep-genomics")
+
+    def test_hit_prints_a_paste_ready_line(self):
+        lines = self.run_probe({"lever": lambda *_: [object(), object()]})
+        self.assertIn("# lever            HIT   2 postings", lines)
+        self.assertIn(
+            '    {"name": "Deep Genomics", "platform": "lever", '
+            '"token": "deep-genomics", "ai_native": False},',
+            lines,
+        )
+
+    def test_empty_board_is_a_miss(self):
+        """SmartRecruiters answers 200 with nothing for any slug at all."""
+        lines = self.run_probe({"smartrecruiters": lambda *_: []})
+        self.assertFalse(any("HIT" in line for line in lines))
+        self.assertIn("# smartrecruiters  miss  (0 postings)", lines)
+
+    def test_every_platform_is_reported(self):
+        lines = self.run_probe({})
+        self.assertEqual(len(lines), len(sources.PROBE_PLATFORMS))
+
+
+if __name__ == "__main__":
+    unittest.main()
