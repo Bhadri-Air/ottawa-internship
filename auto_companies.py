@@ -58,7 +58,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'RSM', 'platform': 'workday', 'token': 'https://rsm.wd1.myworkdayjobs.com/wday/cxs/rsm/RSMCareers/jobs', 'ai_native': False},
     {'name': 'Ryan', 'platform': 'workday', 'token': 'https://ryan.wd1.myworkdayjobs.com/wday/cxs/ryan/RyanCareers/jobs', 'ai_native': False},
     {'name': 'ShyftLabs', 'platform': 'lever', 'token': 'shyftlabs', 'ai_native': False},
-    {'name': 'Solink', 'platform': 'ashby', 'token': 'solink', 'ai_native': False},
+    {'name': 'SOTI', 'platform': 'workday', 'token': 'https://soti.wd3.myworkdayjobs.com/wday/cxs/soti/SOTI-Next-Gen/jobs', 'ai_native': False},
     {'name': 'Spaceium', 'platform': 'greenhouse', 'token': 'spaceium', 'ai_native': False},
     {'name': 'TMX Group', 'platform': 'workday', 'token': 'https://tmx.wd3.myworkdayjobs.com/wday/cxs/tmx/TMX_Careers/jobs', 'ai_native': False},
     {'name': 'Trimble', 'platform': 'workday', 'token': 'https://trimble.wd1.myworkdayjobs.com/wday/cxs/trimble/TrimbleCareers/jobs', 'ai_native': False},
