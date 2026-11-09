@@ -55,7 +55,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Rockwell Automation', 'platform': 'workday', 'token': 'https://rockwellautomation.wd1.myworkdayjobs.com/wday/cxs/rockwellautomation/External-Rockwell-Automation-Early-Careers/jobs', 'ai_native': False},
     {'name': 'Rockwell Automation', 'platform': 'workday', 'token': 'https://rockwellautomation.wd1.myworkdayjobs.com/wday/cxs/rockwellautomation/External_Rockwell_Automation/jobs', 'ai_native': False},
     {'name': 'Rodan Energy Solutions', 'platform': 'jazzhr', 'token': 'rodanenergysolutionsinc', 'ai_native': False},
-    {'name': 'RSM', 'platform': 'workday', 'token': 'https://rsm.wd1.myworkdayjobs.com/wday/cxs/rsm/RSMCareers/jobs', 'ai_native': False},
+    {'name': 'Ryan', 'platform': 'workday', 'token': 'https://ryan.wd1.myworkdayjobs.com/wday/cxs/ryan/RyanCareers/jobs', 'ai_native': False},
     {'name': 'ShyftLabs', 'platform': 'lever', 'token': 'shyftlabs', 'ai_native': False},
     {'name': 'Solink', 'platform': 'ashby', 'token': 'solink', 'ai_native': False},
     {'name': 'SOTI', 'platform': 'workday', 'token': 'https://soti.wd3.myworkdayjobs.com/wday/cxs/soti/SOTI-Next-Gen/jobs', 'ai_native': False},
