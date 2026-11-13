@@ -384,7 +384,7 @@ NOTIFIERS = ["dashboard"]
 # Older postings are still recorded (so dedupe keeps working) but never surface
 # on the dashboard. Drop this to 48 if a week starts feeling like too much
 # noise; the dashboard labels every role with its age either way.
-MAX_AGE_HOURS = 168
+MAX_AGE_HOURS = 336
 
 # Strict (AI/ML) roles stay listed longer: 336 = two weeks. They are rarer and
 # worth applying to after the first week, even though a role that old no
