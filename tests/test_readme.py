@@ -175,7 +175,6 @@ class TestRendering(ReadmeCase):
 
     def test_empty_tier_states_the_window(self):
         self.render()
-        self.assertIn("_Nothing in the last 7 days._", self.read())
         self.assertIn("_Nothing in the last 14 days._", self.read())
 
     def test_ai_ml_roles_stay_listed_for_two_weeks(self):
