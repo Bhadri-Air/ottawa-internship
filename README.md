@@ -37,7 +37,7 @@ Everything between the markers is generated. Don't edit it by hand.
 
 <!-- radar:listings:start -->
 
-_Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &middot; last 14 days, newest first._
+_Updated Saturday 14 November, 18:59 Eastern &middot; 184/185 sources healthy &middot; last 14 days, newest first._
 
 ### 🤖 AI/ML &middot; 22 roles &middot; last 14 days
 
@@ -287,28 +287,28 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 
 | Source | Postings | Status |
 |---|---|---|
-| Intel \[workday\] | 605 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| 1Password \[ashby\] | 80 | ok |
+| BDO Canada \[workday\] | 230 | **FAIL** HTTPError: 401 Client Error: Unauthorized for url: https://bdo.wd3.myworkdayjobs.com/wday/ |
+| 1Password \[ashby\] | 81 | ok |
+| AB InBev \[workday\] | 84 | ok |
 | AMD \[jibe\] | 81 | ok |
 | Acceldata \[lever\] | 39 | ok |
 | Accenture \[workday\] | 147 | ok |
 | Ada \[greenhouse\] | 7 | ok |
-| Aerospace Corporation \[oracle\] | 427 | ok |
+| Aerospace Corporation \[oracle\] | 426 | ok |
 | Affirm \[greenhouse\] | 217 | ok |
 | Airbnb \[greenhouse\] | 214 | ok |
 | Alexion \[workday\] | 117 | ok |
 | Altera \[workday\] | 177 | ok |
 | Amazon \[amazon\] | 157 | ok |
-| American Express \[oracle\] | 168 | ok |
+| American Express \[oracle\] | 169 | ok |
 | Analog Devices \[workday\] | 8 | ok |
-| Anthropic \[greenhouse\] | 669 | ok |
+| Anthropic \[greenhouse\] | 670 | ok |
 | Aon \[jibe\] | 39 | ok |
 | Aptiv \[workday\] | 42 | ok |
 | Astera Labs \[greenhouse\] | 89 | ok |
-| AtkinsRéalis \[workday\] | 484 | ok |
+| AtkinsRéalis \[workday\] | 483 | ok |
 | Autodesk \[workday:uni\] | - | **empty** |
 | Autodesk \[workday\] | 4 | ok |
-| BDO Canada \[workday\] | 230 | ok |
 | BGIS \[oracle\] | 264 | ok |
 | BMO \[workday\] | 401 | ok |
 | Bank of Montreal \[workday:Privileged\] | 21 | ok |
@@ -327,7 +327,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Cerebras \[ashby\] | 125 | ok |
 | Ciena \[workday\] | 90 | ok |
 | Cisco \[html\] | 47 | ok |
-| Cisco \[workday\] | 483 | ok |
+| Cisco \[workday\] | 484 | ok |
 | Clearco \[ashby\] | 6 | ok |
 | Clutch Canada \[greenhouse\] | 82 | ok |
 | Cohere \[ashby\] | 121 | ok |
@@ -346,7 +346,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Faire \[greenhouse\] | 71 | ok |
 | Float \[ashby\] | 18 | ok |
 | Foresters Financial \[workday\] | 26 | ok |
-| GE Vernova \[workday:vernova\_externalsite\] | 545 | ok |
+| GE Vernova \[workday:vernova\_externalsite\] | 546 | ok |
 | GE Vernova \[workday\] | 544 | ok |
 | Gastronomous Technologies \[breezy\] | 15 | ok |
 | General Magic \[ashby\] | 3 | ok |
@@ -362,6 +362,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Ideogram \[ashby\] | 4 | ok |
 | Inovia \[getro\] | 385 | ok |
 | Instacart \[greenhouse\] | 85 | ok |
+| Intel \[workday\] | 606 | ok |
 | Jobber \[ashby\] | 40 | ok |
 | Kensington \[greenhouse\] | 31 | ok |
 | Kepler Communications \[lever\] | 18 | ok |
@@ -371,7 +372,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Klue \[ashby\] | 6 | ok |
 | L3Harris Technologies \[successfactors\] | 100 | ok |
 | Lightmatter \[greenhouse\] | 73 | ok |
-| Loblaw Companies \[workday\] | 652 | ok |
+| Loblaw Companies \[workday\] | 656 | ok |
 | Loblaw Digital \[smartrecruiters\] | 4 | ok |
 | Loopio \[ashby\] | 14 | ok |
 | Lumentum \[workday\] | 267 | ok |
@@ -391,7 +392,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Multimatic \[workday\] | 58 | ok |
 | NAV CANADA \[workday\] | 30 | ok |
 | Neo Financial \[ashby\] | 59 | ok |
-| New-Grad-Positions \[tracker\] | 3252 | ok |
+| New-Grad-Positions \[tracker\] | 3239 | ok |
 | Nokia \[oracle\] | 28 | ok |
 | Nuclear Promise X \[ashby\] | 16 | ok |
 | Nvidia \[workday\] | 18 | ok |
@@ -423,7 +424,7 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Royal Bank of Canada \[workday\] | 33 | ok |
 | Ryan \[workday\] | 23 | ok |
 | SOTI \[workday\] | 21 | ok |
-| Samsara \[greenhouse\] | 318 | ok |
+| Samsara \[greenhouse\] | 319 | ok |
 | Scale AI \[greenhouse\] | 170 | ok |
 | Scotiabank \[successfactors:co-op\] | 9 | ok |
 | Scotiabank \[successfactors\] | 10 | ok |
@@ -439,10 +440,10 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | StackAdapt \[greenhouse\] | 70 | ok |
 | Stantec \[oracle\] | 271 | ok |
 | Stripe \[greenhouse\] | 786 | ok |
-| Summer2027-Internships \[tracker\] | 5336 | ok |
+| Summer2027-Internships \[tracker\] | 5338 | ok |
 | Sun Life \[workday:Campus\] | 3 | ok |
 | Sun Life \[workday\] | 109 | ok |
-| TD \[workday\] | 560 | ok |
+| TD \[workday\] | 567 | ok |
 | TELUS \[successfactors:co-op\] | - | **empty** |
 | TELUS \[successfactors\] | 11 | ok |
 | TMX Group \[workday\] | 101 | ok |
@@ -453,12 +454,12 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | Thinkific \[ashby\] | 3 | ok |
 | Thomson Reuters \[workday\] | 21 | ok |
 | Trimble \[workday\] | 13 | ok |
-| Twilio \[greenhouse\] | 115 | ok |
+| Twilio \[greenhouse\] | 114 | ok |
 | Ubisoft \[smartrecruiters\] | 128 | ok |
 | Varian \[workday\] | 26 | ok |
 | Vector Institute \[html\] | 30 | ok |
 | Veeda AI \[ashby\] | 10 | ok |
-| WTW \[oracle\] | 387 | ok |
+| WTW \[oracle\] | 388 | ok |
 | Waabi \[lever\] | 86 | ok |
 | Wattpad \[lever\] | 17 | ok |
 | Wealthsimple \[ashby\] | 41 | ok |
@@ -469,10 +470,10 @@ _Updated Saturday 14 November, 13:05 Eastern &middot; 183/184 sources healthy &m
 | exacare ai \[rippling\] | 43 | ok |
 | speedyapply-AI-2027 \[tracker\] | 840 | ok |
 | speedyapply-SWE-2027 \[tracker\] | 853 | ok |
-| vansh-Summer2027 \[tracker\] | 2475 | ok |
+| vansh-Summer2027 \[tracker\] | 2478 | ok |
 | zapply-Internships-2027 \[tracker\] | 600 | ok |
 
-_Plus 160 boards discovered from Canadian postings: 160 ok, 21 promoted, 122 demoted._
+_Plus 163 boards discovered from Canadian postings: 162 ok, 1 failing, 22 promoted, 122 demoted._
 
 <!-- radar:listings:end -->
 
