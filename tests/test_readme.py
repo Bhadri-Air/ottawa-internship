@@ -180,7 +180,7 @@ class TestRendering(ReadmeCase):
     def test_ai_ml_roles_stay_listed_for_two_weeks(self):
         store = FakeStore()
         ReadmeWriter(store, path=self.path).render()
-        self.assertEqual(store.windows, {"strict": 336, "loose": 168, "other": 168})
+        self.assertEqual(store.windows, {"strict": 336, "loose": 336, "other": 336})
         self.assertIn("### 🤖 AI/ML &middot; 0 roles &middot; last 14 days", self.read())
 
     def test_failing_source_is_visible(self):
@@ -205,7 +205,7 @@ class TestRendering(ReadmeCase):
         store = FakeStore(loose=[job()])
         store.count_jobs = lambda tier, max_age=None: 412 if tier == "loose" else 0
         ReadmeWriter(store, path=self.path).render()
-        self.assertIn("### 💻 Software &amp; tech &middot; 1 of 412 roles &middot; last 7 days", self.read())
+        self.assertIn("### 💻 Software &amp; tech &middot; 1 of 412 roles &middot; last 14 days", self.read())
 
     def test_board_that_never_had_a_posting_is_flagged_empty(self):
         """A company that moved ATS leaves a board answering 200 with nothing."""
