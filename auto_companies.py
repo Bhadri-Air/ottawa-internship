@@ -6,6 +6,7 @@ normal run or ``--seed``, never by ``--check``.
 """
 
 AUTO_COMPANIES: list[dict] = [
+    {'name': 'AB InBev', 'platform': 'workday', 'token': 'https://abinbev.wd1.myworkdayjobs.com/wday/cxs/abinbev/CAN/jobs', 'ai_native': False},
     {'name': 'Acceldata', 'platform': 'lever', 'token': 'acceldata', 'ai_native': False},
     {'name': 'Accenture', 'platform': 'workday', 'token': 'https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs', 'ai_native': False},
     {'name': 'Aerospace Corporation', 'platform': 'oracle', 'token': 'https://icfcjb.fa.ocs.oraclecloud.com|CX_4001', 'ai_native': False},
@@ -52,7 +53,6 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers2/jobs', 'ai_native': False},
     {'name': 'Member Solutions', 'platform': 'workday', 'token': 'https://talentmanagementsolution.wd3.myworkdayjobs.com/wday/cxs/talentmanagementsolution/Perseus-careers1/jobs', 'ai_native': False},
     {'name': 'Multimatic', 'platform': 'workday', 'token': 'https://multimatic.wd10.myworkdayjobs.com/wday/cxs/multimatic/MMEC/jobs', 'ai_native': False},
-    {'name': 'Nuclear Promise X', 'platform': 'ashby', 'token': 'NPX', 'ai_native': False},
     {'name': 'Plusgrade', 'platform': 'workday', 'token': 'https://plusgrade.wd10.myworkdayjobs.com/wday/cxs/plusgrade/Plusgrade_External_Site/jobs', 'ai_native': False},
     {'name': 'Quora', 'platform': 'ashby', 'token': 'quora', 'ai_native': False},
     {'name': 'Ryan', 'platform': 'workday', 'token': 'https://ryan.wd1.myworkdayjobs.com/wday/cxs/ryan/RyanCareers/jobs', 'ai_native': False},
