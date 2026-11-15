@@ -48,8 +48,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Loblaw Companies', 'platform': 'workday', 'token': 'https://myview.wd3.myworkdayjobs.com/wday/cxs/myview/paradox_careers/jobs', 'ai_native': False},
     {'name': 'Magnet Forensics', 'platform': 'lever', 'token': 'magnetforensics', 'ai_native': False},
     {'name': 'Manulife Financial', 'platform': 'workday', 'token': 'https://manulife.wd3.myworkdayjobs.com/wday/cxs/manulife/MFCJH_adminJobs/jobs', 'ai_native': False},
-    {'name': 'Maple Leaf Sports & Entertainment Partnership (MLSE)', 'platform': 'workday', 'token': 'https://mlse.wd3.myworkdayjobs.com/wday/cxs/mlse/MLSE/jobs', 'ai_native': False},
-    {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers/jobs', 'ai_native': False},
+    {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers2/jobs', 'ai_native': False},
     {'name': 'Member Solutions', 'platform': 'workday', 'token': 'https://talentmanagementsolution.wd3.myworkdayjobs.com/wday/cxs/talentmanagementsolution/Perseus-careers1/jobs', 'ai_native': False},
     {'name': 'Multimatic', 'platform': 'workday', 'token': 'https://multimatic.wd10.myworkdayjobs.com/wday/cxs/multimatic/MMEC/jobs', 'ai_native': False},
     {'name': 'Nuclear Promise X', 'platform': 'ashby', 'token': 'NPX', 'ai_native': False},
@@ -64,6 +63,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Trimble', 'platform': 'workday', 'token': 'https://trimble.wd1.myworkdayjobs.com/wday/cxs/trimble/TrimbleCareers/jobs', 'ai_native': False},
     {'name': 'Varian', 'platform': 'workday', 'token': 'https://onehealthineers.wd3.myworkdayjobs.com/wday/cxs/onehealthineers/SHSJB/jobs', 'ai_native': False},
     {'name': 'Veeda AI', 'platform': 'ashby', 'token': 'veeda-ai', 'ai_native': False},
+    {'name': 'Workday', 'platform': 'workday', 'token': 'https://workday.wd5.myworkdayjobs.com/wday/cxs/workday/Workday_Early_Career/jobs', 'ai_native': False},
     {'name': 'WTW', 'platform': 'oracle', 'token': 'https://eedu.fa.em3.oraclecloud.com|CX_1003', 'ai_native': False},
     {'name': 'Yotta Labs', 'platform': 'ashby', 'token': 'yotta', 'ai_native': False},
 ]
