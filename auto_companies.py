@@ -47,7 +47,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'L3Harris Technologies', 'platform': 'successfactors', 'token': 'https://jobs.l3harris.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
     {'name': 'Loblaw Companies', 'platform': 'workday', 'token': 'https://myview.wd3.myworkdayjobs.com/wday/cxs/myview/paradox_careers/jobs', 'ai_native': False},
     {'name': 'Magnet Forensics', 'platform': 'lever', 'token': 'magnetforensics', 'ai_native': False},
-    {'name': 'Manulife Financial', 'platform': 'workday', 'token': 'https://manulife.wd3.myworkdayjobs.com/wday/cxs/manulife/MFCJH_adminJobs/jobs', 'ai_native': False},
+    {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers/jobs', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers2/jobs', 'ai_native': False},
     {'name': 'Member Solutions', 'platform': 'workday', 'token': 'https://talentmanagementsolution.wd3.myworkdayjobs.com/wday/cxs/talentmanagementsolution/Perseus-careers1/jobs', 'ai_native': False},
     {'name': 'Multimatic', 'platform': 'workday', 'token': 'https://multimatic.wd10.myworkdayjobs.com/wday/cxs/multimatic/MMEC/jobs', 'ai_native': False},
