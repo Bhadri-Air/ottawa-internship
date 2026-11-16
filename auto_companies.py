@@ -46,7 +46,6 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Kinaxis', 'platform': 'jibe', 'token': 'https://kinaxis.jibeapply.com', 'ai_native': False},
     {'name': 'L3Harris Technologies', 'platform': 'successfactors', 'token': 'https://jobs.l3harris.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
     {'name': 'Loblaw Companies', 'platform': 'workday', 'token': 'https://myview.wd3.myworkdayjobs.com/wday/cxs/myview/paradox_careers/jobs', 'ai_native': False},
-    {'name': 'Magnet Forensics', 'platform': 'lever', 'token': 'magnetforensics', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers/jobs', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers2/jobs', 'ai_native': False},
     {'name': 'Member Solutions', 'platform': 'workday', 'token': 'https://talentmanagementsolution.wd3.myworkdayjobs.com/wday/cxs/talentmanagementsolution/Perseus-careers1/jobs', 'ai_native': False},
@@ -66,4 +65,5 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Workday', 'platform': 'workday', 'token': 'https://workday.wd5.myworkdayjobs.com/wday/cxs/workday/Workday_Early_Career/jobs', 'ai_native': False},
     {'name': 'WTW', 'platform': 'oracle', 'token': 'https://eedu.fa.em3.oraclecloud.com|CX_1003', 'ai_native': False},
     {'name': 'Yotta Labs', 'platform': 'ashby', 'token': 'yotta', 'ai_native': False},
+    {'name': 'Zurich Insurance', 'platform': 'successfactors', 'token': 'https://www.careers.zurich.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
 ]
