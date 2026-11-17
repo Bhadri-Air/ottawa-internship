@@ -6,7 +6,6 @@ normal run or ``--seed``, never by ``--check``.
 """
 
 AUTO_COMPANIES: list[dict] = [
-    {'name': 'AB InBev', 'platform': 'workday', 'token': 'https://abinbev.wd1.myworkdayjobs.com/wday/cxs/abinbev/CAN/jobs', 'ai_native': False},
     {'name': 'Acceldata', 'platform': 'lever', 'token': 'acceldata', 'ai_native': False},
     {'name': 'Accenture', 'platform': 'workday', 'token': 'https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs', 'ai_native': False},
     {'name': 'Aerospace Corporation', 'platform': 'oracle', 'token': 'https://icfcjb.fa.ocs.oraclecloud.com|CX_4001', 'ai_native': False},
@@ -31,7 +30,6 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Clutch Canada', 'platform': 'greenhouse', 'token': 'clutch', 'ai_native': False},
     {'name': 'DoorDash', 'platform': 'greenhouse', 'token': 'doordashcanada', 'ai_native': False},
     {'name': 'Equitable Bank', 'platform': 'lever', 'token': 'eqbank', 'ai_native': False},
-    {'name': 'exacare ai', 'platform': 'rippling', 'token': 'exacare-inc', 'ai_native': False},
     {'name': 'Foresters Financial', 'platform': 'workday', 'token': 'https://foresters.wd3.myworkdayjobs.com/wday/cxs/foresters/ForestersFinancialCareers/jobs', 'ai_native': False},
     {'name': 'Gastronomous Technologies', 'platform': 'breezy', 'token': 'gastronomous-technologies-inc', 'ai_native': False},
     {'name': 'GE Vernova', 'platform': 'workday', 'token': 'https://gevernova.wd5.myworkdayjobs.com/wday/cxs/gevernova/only_confidential_executive_recruiting/jobs', 'ai_native': False},
@@ -55,6 +53,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Quora', 'platform': 'ashby', 'token': 'quora', 'ai_native': False},
     {'name': 'Ryan', 'platform': 'workday', 'token': 'https://ryan.wd1.myworkdayjobs.com/wday/cxs/ryan/RyanCareers/jobs', 'ai_native': False},
     {'name': 'ShyftLabs', 'platform': 'lever', 'token': 'shyftlabs', 'ai_native': False},
+    {'name': 'SiTime', 'platform': 'greenhouse', 'token': 'sitimecorporation', 'ai_native': False},
     {'name': 'Solink', 'platform': 'ashby', 'token': 'solink', 'ai_native': False},
     {'name': 'SOTI', 'platform': 'workday', 'token': 'https://soti.wd3.myworkdayjobs.com/wday/cxs/soti/SOTI-Next-Gen/jobs', 'ai_native': False},
     {'name': 'Spaceium', 'platform': 'greenhouse', 'token': 'spaceium', 'ai_native': False},
