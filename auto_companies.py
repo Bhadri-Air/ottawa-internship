@@ -10,6 +10,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Accenture', 'platform': 'workday', 'token': 'https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs', 'ai_native': False},
     {'name': 'Aerospace Corporation', 'platform': 'oracle', 'token': 'https://icfcjb.fa.ocs.oraclecloud.com|CX_4001', 'ai_native': False},
     {'name': 'Alexion', 'platform': 'workday', 'token': 'https://astrazeneca.wd3.myworkdayjobs.com/wday/cxs/astrazeneca/alexion/jobs', 'ai_native': False},
+    {'name': 'Alstom', 'platform': 'successfactors', 'token': 'https://jobsearch.alstom.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
     {'name': 'Altera', 'platform': 'workday', 'token': 'https://altera.wd1.myworkdayjobs.com/wday/cxs/altera/altera/jobs', 'ai_native': False},
     {'name': 'American Express', 'platform': 'oracle', 'token': 'https://egug.fa.us2.oraclecloud.com|CX_1', 'ai_native': False},
     {'name': 'Analog Devices', 'platform': 'workday', 'token': 'https://analogdevices.wd1.myworkdayjobs.com/wday/cxs/analogdevices/External/jobs', 'ai_native': False},
