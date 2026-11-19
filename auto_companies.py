@@ -62,7 +62,6 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Trimble', 'platform': 'workday', 'token': 'https://trimble.wd1.myworkdayjobs.com/wday/cxs/trimble/TrimbleCareers/jobs', 'ai_native': False},
     {'name': 'Varian', 'platform': 'workday', 'token': 'https://onehealthineers.wd3.myworkdayjobs.com/wday/cxs/onehealthineers/SHSJB/jobs', 'ai_native': False},
     {'name': 'Veeda AI', 'platform': 'ashby', 'token': 'veeda-ai', 'ai_native': False},
-    {'name': 'Workday', 'platform': 'workday', 'token': 'https://workday.wd5.myworkdayjobs.com/wday/cxs/workday/Workday_Early_Career/jobs', 'ai_native': False},
     {'name': 'WTW', 'platform': 'oracle', 'token': 'https://eedu.fa.em3.oraclecloud.com|CX_1003', 'ai_native': False},
     {'name': 'Yotta Labs', 'platform': 'ashby', 'token': 'yotta', 'ai_native': False},
     {'name': 'Zurich Insurance', 'platform': 'successfactors', 'token': 'https://www.careers.zurich.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
