@@ -43,7 +43,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Huawei', 'platform': 'recruitee', 'token': 'huaweicanada', 'ai_native': False},
     {'name': 'Human Computer Lab', 'platform': 'ashby', 'token': 'human-computer-lab', 'ai_native': False},
     {'name': 'Kensington', 'platform': 'greenhouse', 'token': 'kensingtontours', 'ai_native': False},
-    {'name': 'Kepler Communications', 'platform': 'lever', 'token': 'kepler', 'ai_native': False},
+    {'name': 'Kinaxis', 'platform': 'jibe', 'token': 'https://kinaxis.jibeapply.com', 'ai_native': False},
     {'name': 'L3Harris Technologies', 'platform': 'successfactors', 'token': 'https://jobs.l3harris.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
     {'name': 'Manulife Financial', 'platform': 'workday', 'token': 'https://manulife.wd3.myworkdayjobs.com/wday/cxs/manulife/MFCJH_adminJobs/jobs', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers/jobs', 'ai_native': False},
