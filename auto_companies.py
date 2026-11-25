@@ -42,7 +42,6 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Kinaxis', 'platform': 'jibe', 'token': 'https://kinaxis.jibeapply.com', 'ai_native': False},
     {'name': 'KPMG', 'platform': 'jibe', 'token': 'https://careers.kpmg.ca', 'ai_native': False},
     {'name': 'L3Harris Technologies', 'platform': 'successfactors', 'token': 'https://jobs.l3harris.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
-    {'name': 'Loblaw Companies', 'platform': 'workday', 'token': 'https://myview.wd3.myworkdayjobs.com/wday/cxs/myview/paradox_careers/jobs', 'ai_native': False},
     {'name': 'Manulife Financial', 'platform': 'workday', 'token': 'https://manulife.wd3.myworkdayjobs.com/wday/cxs/manulife/MFCJH_adminJobs/jobs', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers/jobs', 'ai_native': False},
     {'name': 'Marvell', 'platform': 'workday', 'token': 'https://marvell.wd1.myworkdayjobs.com/wday/cxs/marvell/MarvellCareers2/jobs', 'ai_native': False},
