@@ -53,6 +53,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Quora', 'platform': 'ashby', 'token': 'quora', 'ai_native': False},
     {'name': 'Ryan', 'platform': 'workday', 'token': 'https://ryan.wd1.myworkdayjobs.com/wday/cxs/ryan/RyanCareers/jobs', 'ai_native': False},
     {'name': 'Sanofi', 'platform': 'workday', 'token': 'https://sanofi.wd3.myworkdayjobs.com/wday/cxs/sanofi/SanofiCareers/jobs', 'ai_native': False},
+    {'name': 'Saputo', 'platform': 'workday', 'token': 'https://saputo.wd5.myworkdayjobs.com/wday/cxs/saputo/Saputo_External_Careers/jobs', 'ai_native': False},
     {'name': 'ShyftLabs', 'platform': 'lever', 'token': 'shyftlabs', 'ai_native': False},
     {'name': 'SiTime', 'platform': 'greenhouse', 'token': 'sitimecorporation', 'ai_native': False},
     {'name': 'SOTI', 'platform': 'workday', 'token': 'https://soti.wd3.myworkdayjobs.com/wday/cxs/soti/SOTI-Next-Gen/jobs', 'ai_native': False},
