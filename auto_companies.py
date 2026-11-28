@@ -38,6 +38,7 @@ AUTO_COMPANIES: list[dict] = [
     {'name': 'Honeywell Aerospace', 'platform': 'oracle', 'token': 'https://icfcjb.fa.ocs.oraclecloud.com|Aerospace', 'ai_native': False},
     {'name': 'Huawei', 'platform': 'recruitee', 'token': 'huaweicanada', 'ai_native': False},
     {'name': 'Human Computer Lab', 'platform': 'ashby', 'token': 'human-computer-lab', 'ai_native': False},
+    {'name': 'Intercept', 'platform': 'bamboohr', 'token': 'intercept', 'ai_native': False},
     {'name': 'Kinaxis', 'platform': 'jibe', 'token': 'https://kinaxis.jibeapply.com', 'ai_native': False},
     {'name': 'KPMG', 'platform': 'jibe', 'token': 'https://careers.kpmg.ca', 'ai_native': False},
     {'name': 'L3Harris Technologies', 'platform': 'successfactors', 'token': 'https://jobs.l3harris.com/search/?q=&locationsearch=Ontario', 'ai_native': False},
