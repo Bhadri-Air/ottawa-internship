@@ -37,7 +37,7 @@ Everything between the markers is generated. Don't edit it by hand.
 
 <!-- radar:listings:start -->
 
-_Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &middot; last 14 days, newest first._
+_Updated Saturday 28 November, 11:58 Eastern &middot; 199/201 sources healthy &middot; last 14 days, newest first._
 
 ### 🤖 AI/ML &middot; 22 roles &middot; last 14 days
 
@@ -66,7 +66,7 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | [Applied Machine Learning Engineer Intern, Summer](https://www.shopify.com/careers/applied-machine-learning-engineering-internships-summer-2027_1d6b9bb9-a132-4ad9-b33f-3e55d2cfc536) | Shopify | **Ottawa / Toronto** | Montreal, Canada, Toronto, Canada, Ottawa, Canada | Summer 2027 | 12 days ago |
 | [Intern, AI Value Creation Office](https://brookfield.wd5.myworkdayjobs.com/en-US/brookfieldprivate/job/Toronto-Ontario/Intern--AI-Value-Creation-Office_R2048790) | Brookfield | **Toronto** | Toronto, Ontario | - | date unknown |
 
-### 💻 Software &amp; tech &middot; 70 roles &middot; last 14 days
+### 💻 Software &amp; tech &middot; 69 roles &middot; last 14 days
 
 | Role | Company | City | Location | Term | Posted |
 |---|---|---|---|---|---|
@@ -106,7 +106,6 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | [Personal &amp; Business Banking Development Program (New Graduate)](https://bmo.wd3.myworkdayjobs.com/en-US/Privileged/job/Toronto-ON-CAN/Personal---Business-Banking-Development-Program--New-Graduate-_R260023509) | Bank of Montreal | **Toronto** | Toronto, ON, CAN | - | 8 days ago |
 | [Researcher Intern - Mathematical Foundations of Differentiable World Models](https://huaweicanada.recruitee.com/o/intern-researcher-mathematical-foundations-of-differentiable-world-models) | Huawei | **Ottawa** | Ottawa, ON, Canada | - | 8 days ago |
 | [Embedded Engineer Intern](https://icfcjb.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Aerospace/job/127880) | Honeywell Aerospace | **Ottawa** | Kanata, Ottawa, ON, Canada | - | 8 days ago |
-| [Digital New Grad - Product Analyst](https://sanofi.wd3.myworkdayjobs.com/SanofiCareers/job/Toronto-ON/XMLNAME-2027-Digital-Graduate-Program--Product-Analyst_R2878972-1) | Sanofi | **Toronto** | Toronto, ON, Canada | - | 9 days ago |
 | [Software Engineer New Grad](https://jobs.ashbyhq.com/keplar/9da9bb8e-d7f1-4247-b6da-8392ebc852bd/application?embed=true) | Keplar | **Toronto** | Toronto, ON, Canada, Waterloo, ON, Canada | - | 9 days ago |
 | [Accenture Strategy Consultant Development Program - Summer Consultant (MBA Intern) - Canada - NAELFY27](https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/Toronto-40-King-St-W-Corp/Accenture-Strategy-Consultant-Development-Program---Summer-Consultant--MBA-Intern----Canada---NAELFY27_R00353362) | Accenture | **Canada** | not listed | Summer 2027 | 9 days ago |
 | [Software Developer Intern - SOTI XSight (May 2027 12 Months)](https://soti.wd3.myworkdayjobs.com/en-US/SOTI-Next-Gen/job/Mississauga-Canada--Meadowvale-Office-HQ/Software-Developer-Intern---SOTI-XSight--May-2027-12-Months-_R10718) | SOTI | **Toronto** | Mississauga, Canada – Meadowvale Office (HQ) | Summer 2027 | 9 days ago |
@@ -247,74 +246,51 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 
 | Source | Postings | Status |
 |---|---|---|
-| Altera \[workday\] | 181 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Analog Devices \[workday\] | 6 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Aptiv \[workday\] | 42 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| AtkinsRéalis \[workday\] | 492 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Autodesk \[workday:uni\] | - | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Autodesk \[workday\] | 5 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| BDO Canada \[workday\] | 207 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| BMO \[workday\] | 399 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Bank of Montreal \[workday:Privileged\] | 44 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Bank of Montreal \[workday\] | 7 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| BiblioCommons \[workday\] | 5 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Bird Construction \[workday\] | 155 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Brookfield \[workday\] | 8 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| CIBC \[workday:campus\] | 9 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| CIBC \[workday\] | 395 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Ciena \[workday\] | 92 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Entrust \[workday\] | 7 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Hitachi \[workday\] | 142 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Intel \[workday\] | 637 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Lumentum \[workday\] | 266 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Magna \[workday\] | 194 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Manulife Financial \[workday:MFCJH\_adminJobs\] | 11 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Manulife Financial \[workday\] | 179 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Marvell \[workday:MarvellCareers2\] | 1 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Marvell \[workday\] | 18 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Member Solutions \[workday\] | 24 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Nvidia \[workday\] | 16 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
 | Real Ventures \[getro\] | 963 | **FAIL** ConnectionError: HTTPSConnectionPool(host='jobs.realventures.com', port=443): Max retries |
-| Royal Bank of Canada \[workday:ExternalPrivatePostingStudents\] | 21 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Royal Bank of Canada \[workday:rbcglobal1\] | 457 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Royal Bank of Canada \[workday\] | 35 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Ryan \[workday\] | 22 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| SOTI \[workday\] | 21 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Saputo \[workday\] | 147 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Semtech \[workday\] | 26 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Sun Life \[workday:Campus\] | 7 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Sun Life \[workday\] | 127 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| TD \[workday\] | 599 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| TMX Group \[workday\] | 97 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Thomson Reuters \[workday\] | 18 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
-| Varian \[workday\] | 18 | **FAIL** JSONDecodeError: Expecting value: line 1 column 1 (char 0) |
+| Vector Institute \[html\] | 30 | **FAIL** HTTPError: 403 Client Error: Forbidden for url: https://vectorinstitute.ai/careers/ |
 | 1Password \[ashby\] | 79 | ok |
 | AB InBev \[workday\] | 65 | ok |
 | AMD \[jibe\] | 78 | ok |
 | Acceldata \[lever\] | 41 | ok |
-| Accenture \[workday\] | 156 | ok |
+| Accenture \[workday\] | 151 | ok |
 | Ada \[greenhouse\] | 7 | ok |
 | Aerospace Corporation \[oracle\] | 413 | ok |
 | Affirm \[greenhouse\] | 218 | ok |
 | Airbnb \[greenhouse\] | 200 | ok |
 | Alexion \[workday\] | 121 | ok |
 | Alstom \[successfactors\] | 129 | ok |
+| Altera \[workday\] | 181 | ok |
 | Amazon \[amazon\] | 157 | ok |
-| American Express \[oracle\] | 222 | ok |
+| American Express \[oracle\] | 219 | ok |
+| Analog Devices \[workday\] | 6 | ok |
 | Anthropic \[greenhouse\] | 634 | ok |
 | Aon \[jibe\] | 39 | ok |
+| Aptiv \[workday\] | 42 | ok |
 | Astera Labs \[greenhouse\] | 76 | ok |
+| AtkinsRéalis \[workday\] | 492 | ok |
+| Autodesk \[workday:uni\] | - | **empty** |
+| Autodesk \[workday\] | 5 | ok |
+| BDO Canada \[workday\] | 207 | ok |
 | BGIS \[oracle\] | 265 | ok |
+| BMO \[workday\] | 396 | ok |
+| Bank of Montreal \[workday:Privileged\] | 39 | ok |
+| Bank of Montreal \[workday\] | 6 | ok |
 | BenchSci \[lever\] | - | **empty** |
+| BiblioCommons \[workday\] | 5 | ok |
+| Bird Construction \[workday\] | 155 | ok |
 | Birdseye Security Solutions \[bamboohr\] | 36 | ok |
 | BitGo \[greenhouse\] | 4 | ok |
 | Brave \[greenhouse\] | 11 | ok |
 | Bree \[ashby\] | 10 | ok |
+| Brookfield \[workday\] | 8 | ok |
+| CIBC \[workday:campus\] | 9 | ok |
+| CIBC \[workday\] | 370 | ok |
 | Canadian-Tech-Internships-2027 \[tracker\] | 213 | ok |
 | Capital One \[workday\] | 537 | ok |
 | Celestica \[successfactors\] | 77 | ok |
 | Cerebras \[ashby\] | 134 | ok |
-| Cisco \[html\] | 47 | ok |
+| Ciena \[workday\] | 92 | ok |
+| Cisco \[html\] | 48 | ok |
 | Cisco \[workday\] | 483 | ok |
 | Clearco \[ashby\] | 5 | ok |
 | Clutch Canada \[greenhouse\] | 85 | ok |
@@ -322,13 +298,14 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | Coinbase \[greenhouse\] | 256 | ok |
 | Confluent \[ashby\] | - | **empty** |
 | D2L \[greenhouse\] | 29 | ok |
-| Databricks \[greenhouse\] | 889 | ok |
+| Databricks \[greenhouse\] | 888 | ok |
 | Deep Genomics \[lever\] | - | **empty** |
 | Definity Financial \[oracle\] | 37 | ok |
 | DoorDash \[greenhouse\] | 41 | ok |
 | Dropbox \[greenhouse\] | 51 | ok |
 | EUNA Solutions \[bamboohr\] | 51 | ok |
-| Elastic \[greenhouse\] | 369 | ok |
+| Elastic \[greenhouse\] | 371 | ok |
+| Entrust \[workday\] | 7 | ok |
 | Equitable Bank \[lever\] | 75 | ok |
 | Ericsson \[eightfold\] | 22 | ok |
 | Faire \[greenhouse\] | 71 | ok |
@@ -341,16 +318,18 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | Georgian Partners Growth \[ashby\] | 3 | ok |
 | Geotab \[greenhouse\] | 52 | ok |
 | GitLab \[greenhouse\] | 244 | ok |
-| Golden Ventures \[consider\] | 584 | ok |
+| Golden Ventures \[consider\] | 582 | ok |
 | Hitachi Energy \[workday\] | 141 | ok |
+| Hitachi \[workday\] | 142 | ok |
 | Honeywell Aerospace \[oracle\] | 412 | ok |
 | Hootsuite \[greenhouse\] | 16 | ok |
 | Hopper \[ashby\] | 33 | ok |
 | Huawei \[recruitee\] | 184 | ok |
 | Human Computer Lab \[ashby\] | 14 | ok |
 | Ideogram \[ashby\] | 3 | ok |
-| Inovia \[getro\] | 410 | ok |
+| Inovia \[getro\] | 404 | ok |
 | Instacart \[greenhouse\] | 97 | ok |
+| Intel \[workday\] | 637 | ok |
 | Intercept \[bamboohr\] | 8 | ok |
 | Jobber \[ashby\] | 34 | ok |
 | KPMG \[jibe\] | 125 | ok |
@@ -365,10 +344,17 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | Loblaw Companies \[workday\] | 647 | ok |
 | Loblaw Digital \[smartrecruiters\] | 4 | ok |
 | Loopio \[ashby\] | 14 | ok |
+| Lumentum \[workday\] | 266 | ok |
 | Lyft \[greenhouse\] | 143 | ok |
 | Mackenzie Investments \[icims\] | 29 | ok |
+| Magna \[workday\] | 194 | ok |
 | Magnet Forensics \[lever\] | 31 | ok |
+| Manulife Financial \[workday:MFCJH\_adminJobs\] | 9 | ok |
+| Manulife Financial \[workday\] | 172 | ok |
 | Maple Leaf Sports &amp; Entertainment Partnership (MLSE) \[workday\] | 73 | ok |
+| Marvell \[workday:MarvellCareers2\] | 1 | ok |
+| Marvell \[workday\] | 18 | ok |
+| Member Solutions \[workday\] | 24 | ok |
 | Method \[greenhouse\] | 12 | ok |
 | Microsoft \[eightfold\] | 68 | ok |
 | Miovision \[ashby\] | 13 | ok |
@@ -376,11 +362,12 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | Multimatic \[workday\] | 55 | ok |
 | NAV CANADA \[workday\] | 31 | ok |
 | Neo Financial \[ashby\] | 59 | ok |
-| New-Grad-Positions \[tracker\] | 3177 | ok |
+| New-Grad-Positions \[tracker\] | 3169 | ok |
 | Nokia \[oracle\] | 24 | ok |
 | Nuclear Promise X \[ashby\] | 17 | ok |
+| Nvidia \[workday\] | 16 | ok |
 | OLG \[workday\] | 1 | ok |
-| Okta \[greenhouse\] | 360 | ok |
+| Okta \[greenhouse\] | 359 | ok |
 | Ontario Power Generation \[html\] | 15 | ok |
 | OpenAI \[ashby\] | 876 | ok |
 | PagerDuty \[greenhouse\] | 49 | ok |
@@ -402,11 +389,18 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | Rodan Energy Solutions \[jazzhr\] | 17 | ok |
 | Rogers \[successfactors:co-op\] | - | **empty** |
 | Rogers \[successfactors\] | 102 | ok |
-| Samsara \[greenhouse\] | 294 | ok |
+| Royal Bank of Canada \[workday:ExternalPrivatePostingStudents\] | 20 | ok |
+| Royal Bank of Canada \[workday:rbcglobal1\] | 454 | ok |
+| Royal Bank of Canada \[workday\] | 35 | ok |
+| Ryan \[workday\] | 22 | ok |
+| SOTI \[workday\] | 21 | ok |
+| Samsara \[greenhouse\] | 297 | ok |
 | Sanofi \[workday\] | 18 | ok |
+| Saputo \[workday\] | 147 | ok |
 | Scale AI \[greenhouse\] | 158 | ok |
 | Scotiabank \[successfactors:co-op\] | 6 | ok |
 | Scotiabank \[successfactors\] | 7 | ok |
+| Semtech \[workday\] | 26 | ok |
 | ServiceNow \[smartrecruiters\] | 26 | ok |
 | Shakepay \[greenhouse\] | 7 | ok |
 | Shopify \[html\] | 114 | ok |
@@ -419,20 +413,26 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | StackAdapt \[greenhouse\] | 72 | ok |
 | Stantec \[oracle\] | 271 | ok |
 | Stripe \[greenhouse\] | 771 | ok |
-| Summer2027-Internships \[tracker\] | 5312 | ok |
+| Summer2027-Internships \[tracker\] | 5306 | ok |
+| Sun Life \[workday:Campus\] | 6 | ok |
+| Sun Life \[workday\] | 123 | ok |
 | Super.com \[ashby\] | 13 | ok |
+| TD \[workday\] | 575 | ok |
 | TELUS \[successfactors:co-op\] | - | **empty** |
 | TELUS \[successfactors\] | 12 | ok |
+| TMX Group \[workday\] | 97 | ok |
 | Tailscale \[greenhouse\] | 87 | ok |
 | Telus Digital \[ashby\] | 54 | ok |
 | Tenstorrent \[greenhouse:tenstorrentuniversity\] | 12 | ok |
 | Tenstorrent \[greenhouse\] | 153 | ok |
 | Thinkific \[ashby\] | 3 | ok |
+| Thomson Reuters \[workday\] | 18 | ok |
 | Trimble \[workday\] | 4 | ok |
 | Twilio \[greenhouse\] | 114 | ok |
 | Ubisoft \[smartrecruiters\] | 71 | ok |
-| Vector Institute \[html\] | 30 | ok |
+| Varian \[workday\] | 18 | ok |
 | Veeda AI \[ashby\] | 11 | ok |
+| W.W. Grainger \[successfactors\] | 13 | ok |
 | WTW \[oracle\] | 363 | ok |
 | Waabi \[lever\] | 80 | ok |
 | Wattpad \[lever\] | 18 | ok |
@@ -445,10 +445,10 @@ _Updated Saturday 28 November, 02:52 Eastern &middot; 159/200 sources healthy &m
 | exacare ai \[rippling\] | 32 | ok |
 | speedyapply-AI-2027 \[tracker\] | 862 | ok |
 | speedyapply-SWE-2027 \[tracker\] | 857 | ok |
-| vansh-Summer2027 \[tracker\] | 2493 | ok |
+| vansh-Summer2027 \[tracker\] | 2491 | ok |
 | zapply-Internships-2027 \[tracker\] | 600 | ok |
 
-_Plus 221 boards discovered from Canadian postings: 169 ok, 52 failing, 38 promoted, 164 demoted._
+_Plus 221 boards discovered from Canadian postings: 221 ok, 38 promoted, 166 demoted._
 
 <!-- radar:listings:end -->
 
